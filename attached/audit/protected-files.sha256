@@ -1,0 +1,15 @@
+# SHA-256 of the 8 KGSL files that carry CVE-2024-23380.
+# Extracted from the pinned upstream tarball and confirmed identical in
+# both the vulnerable and fixed snapshots (build/verify-protected.sh).
+# Re-check with:  sha256sum -c protected-files.sha256
+# from a root of the extracted kernel tree.
+#
+# Vulnerable snapshot (msm-5.10 @ 36f524a278d3c2e72b426e7385814366a626b936):
+96088fa2b8e7e0bbcb10199140315ddf09228be4f4e8ac86db47a104fe1d66db  drivers/gpu/msm/kgsl_vbo.c
+c824f66849418f6d2b5b899dc6ae4db4a847f90e23322a980d41a6470642cd44  drivers/gpu/msm/kgsl_mmu.c
+c7a7d61c2ba1e7fc1b24e9ca2a3522c9ed6c6a45be16d1dd6352315dffd64250  drivers/gpu/msm/kgsl_iommu.c
+1f773c66669f4e77099be6f264d8f9321370066bc5e93b9d6760ce5dc1cd6df5  drivers/gpu/msm/kgsl_sharedmem.c
+096dc822e186fbb00eae7eb12037ec84d0061f541941744264f16fd0a7970dd7  drivers/gpu/msm/kgsl_pool.c
+d83c1b5370c4b6250b9f6f19c6eae85bf55410e8572e1974fb24a9a4d756c5bb  drivers/gpu/msm/kgsl_reclaim.c
+875a221313e151448080d3550e6919ec0cc48c47173897018788e2a6971d0f2b  drivers/gpu/msm/kgsl_ioctl.c
+f4705d15a5d51442015dff65fc787cdcb759c11bb934161d827809d9e194e972  drivers/gpu/msm/adreno.c

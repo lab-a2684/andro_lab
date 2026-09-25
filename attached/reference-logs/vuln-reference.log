@@ -1,0 +1,1786 @@
+[    0.000000] Booting Linux on physical CPU 0x0000000000 [0x411fd070]
+[    0.000000] Linux version 5.10.198-gc84748f12ae9-dirty (codespace@codespaces-76810c) (aarch64-linux-gnu-gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #12 SMP PREEMPT Fri Sep 25 17:37:02 UTC 2026
+[    0.000000] Machine model: CVE-2024-23380 KGSL testgpu virt
+[    0.000000] earlycon: pl11 at MMIO 0x0000000009000000 (options '')
+[    0.000000] printk: bootconsole [pl11] enabled
+[    0.611674] clk_debug_init: unable to find root clk debugfs directory, ret=0
+[    0.673087] NOHZ tick-stop error: Non-RCU local softirq work is pending, handler #80!!!
+[    2.073858] EINJ: ACPI disabled.
+[    2.151832] Failed to set up IOMMU for device c008000.qcom,kgsl-smmu-v2:gfx3d_user; retaining platform DMA ops
+[    2.160008] kgsl-3d c010000.gpu: _opp_is_duplicate: duplicate OPPs detected. Existing: freq: 300000000, volt: 0, enabled: 1. New: freq: 300000000, volt: 0, enabled: 1
+[    2.163361] kgsl-iommu c008000.qcom,kgsl-smmu-v2: supply vddcx not found, using dummy regulator
+[    2.165416] Failed to set up IOMMU for device c008000.qcom,kgsl-smmu-v2:gfx3d_user; retaining platform DMA ops
+[    2.417365] cacheinfo: Unable to detect cache hierarchy for CPU 0
+[    2.573505] 
+[    2.573685] ********************************************************************
+[    2.573996] **     NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE           **
+[    2.574316] **                                                                **
+[    2.574841] **  WRITEABLE clk DebugFS SUPPORT HAS BEEN ENABLED IN THIS KERNEL **
+[    2.575134] **                                                                **
+[    2.575629] ** This means that this kernel is built to expose clk operations  **
+[    2.575965] ** such as parent or rate setting, enabling, disabling, etc.      **
+[    2.576527] ** to userspace, which may compromise security on your system.    **
+[    2.576889] **                                                                **
+[    2.577216] ** If you see this message and you are not debugging the          **
+[    2.577687] ** kernel, report this immediately to your vendor!                **
+[    2.578012] **                                                                **
+[    2.578471] **     NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE           **
+[    2.578829] ********************************************************************
+[    2.775626] NOHZ tick-stop error: Non-RCU local softirq work is pending, handler #80!!!
+[    2.779560] NOHZ tick-stop error: Non-RCU local softirq work is pending, handler #80!!!
+[    2.791668] NOHZ tick-stop error: Non-RCU local softirq work is pending, handler #80!!!
+[    2.795674] NOHZ tick-stop error: Non-RCU local softirq work is pending, handler #80!!!
+
+===============================================================
+ CVE-2024-23380 lab  --  KGSL VBO bind UAF (CWE-416)
+ kernel: 5.10.198-gc84748f12ae9-dirty  machine: aarch64
+===============================================================
+
+crw-rw----    1 root     kgsl      238,   0 Jan  1 00:00 [1;35m/dev/kgsl-3d0[m
+[    2.867547] NOHZ tick-stop error: Non-RCU local softirq work is pending, handler #80!!!
+--- launching harness as uid=10000 gid=10000 ---
+[    2.883552] NOHZ tick-stop error: Non-RCU local softirq work is pending, handler #80!!!
+[    2.895597] NOHZ tick-stop error: Non-RCU local softirq work is pending, handler #80!!!
+===============================================================
+ CVE-2024-23380  KGSL VBO bind UAF  (CWE-416)
+===============================================================
+ tunables: attempts=64 uaf_pages=48 start_delay_us=1000 settle_ms=300 placeholders=8 ranges=1
+ uid=10000 gid=10000 euid=10000
+[+] opened /dev/kgsl-3d0
+[0] baseline
+[    2.922364] testgpu: memwrite dst=0x4000009000 phys=0x41849000 value=0x5a5a5a5a
+[    2.922871] testgpu: memwrite done phys=0x41849000 value=0x5a5a5a5a
+    ok: GPU write/read round trip
+    ok: VBO id=0x2 gpuaddr=0x4000040000
+[    3.152418] NOHZ tick-stop error: Non-RCU local softirq work is pending, handler #80!!!
+[    3.152950] NOHZ tick-stop error: Non-RCU local softirq work is pending, handler #80!!!
+    ok: clean VBO bind/read (0x41414141)
+[1] racing bind against unbind
+[    4.297360] ------------[ cut here ]------------
+[    4.297756] WARNING: CPU: 1 PID: 17 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[    4.298259] Modules linked in:
+[    4.298773] CPU: 1 PID: 17 Comm: kworker/1:0 Not tainted 5.10.198-gc84748f12ae9-dirty #12
+[    4.299119] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[    4.299761] Workqueue: events kgsl_sharedmem_bind_worker
+[    4.300155] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[    4.300511] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[    4.300829] lr : __arm_lpae_map+0x3b8/0x4e0
+[    4.301037] sp : ffff80000a0d3820
+[    4.301200] x29: ffff80000a0d3820 x28: ffff0000057ed000 
+[    4.301742] x27: 0060000000000e40 x26: 0000000043094000 
+[    4.302017] x25: 0000000000001000 x24: 0000004000040000 
+[    4.302312] x23: 0000000000001000 x22: 0000000000000000 
+[    4.302857] x21: 0000000000000001 x20: 0000000000000003 
+[    4.303143] x19: 0000000000000001 x18: 0000000000000000 
+[    4.303487] x17: 0000000000000000 x16: 0000000000000000 
+[    4.303995] x15: 00000000efe4b99a x14: 0000000000000001 
+[    4.304276] x13: 0000000000000382 x12: ffff000003e76200 
+[    4.304703] x11: 0000000000001000 x10: ffff0000057ed208 
+[    4.305013] x9 : 0060000041880e43 x8 : ffff0000057ed208 
+[    4.305467] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[    4.305737] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[    4.305999] x3 : 0000000000000003 x2 : 0060000000000e40 
+[    4.306440] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[    4.306887] Call trace:
+[    4.307061]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[    4.307296]  __arm_lpae_map+0x3b8/0x4e0
+[    4.307537]  __arm_lpae_map+0x13c/0x4e0
+[    4.307778]  __arm_lpae_map+0x13c/0x4e0
+[    4.307969]  __arm_lpae_map+0x13c/0x4e0
+[    4.308164]  arm_lpae_map_pages+0x15c/0x190
+[    4.308373]  arm_lpae_map+0x20/0x30
+[    4.308557]  _iopgtbl_map_page_to_range+0x94/0xf4
+[    4.308820]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[    4.309082]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[    4.309319]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[    4.309555]  process_one_work+0x1bc/0x4b0
+[    4.310691]  worker_thread+0x6c/0x43c
+[    4.310936]  kthread+0x150/0x154
+[    4.311120]  ret_from_fork+0x10/0x34
+[    4.311816] ---[ end trace 71da18ce5ef17933 ]---
+[+] UAF  attempt=3 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[    4.622156] testgpu: memwrite dst=0x4000040000 phys=0x41880000 value=0xcafebabe
+[    4.622518] testgpu: memwrite done phys=0x41880000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[    4.637005] ------------[ cut here ]------------
+[    4.637376] WARNING: CPU: 1 PID: 17 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[    4.638020] Modules linked in:
+[    4.638330] CPU: 1 PID: 17 Comm: kworker/1:0 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[    4.638756] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[    4.639093] Workqueue: events kgsl_sharedmem_bind_worker
+[    4.639358] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[    4.639701] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[    4.639937] lr : __arm_lpae_map+0x3b8/0x4e0
+[    4.640255] sp : ffff80000a0d3820
+[    4.640413] x29: ffff80000a0d3820 x28: ffff0000057ed000 
+[    4.640714] x27: 0060000000000e40 x26: 0000000043094000 
+[    4.640979] x25: 0000000000001000 x24: 0000004000040000 
+[    4.641239] x23: 0000000000001000 x22: 0000000000000000 
+[    4.641504] x21: 0000000000000001 x20: 0000000000000003 
+[    4.641802] x19: 0000000000000001 x18: 0000000000000000 
+[    4.642074] x17: 0000000000000000 x16: 0000001090c1db94 
+[    4.642344] x15: 00000000a9a15ab4 x14: 0000000000000001 
+[    4.642743] x13: 0000000000000353 x12: ffff000003e76200 
+[    4.643015] x11: 0000000000001000 x10: ffff0000057ed208 
+[    4.643301] x9 : 0060000041880e43 x8 : ffff0000057ed208 
+[    4.643604] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[    4.643868] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[    4.644120] x3 : 0000000000000003 x2 : 0060000000000e40 
+[    4.644372] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[    4.644653] Call trace:
+[    4.644803]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[    4.645045]  __arm_lpae_map+0x3b8/0x4e0
+[    4.645243]  __arm_lpae_map+0x13c/0x4e0
+[    4.645433]  __arm_lpae_map+0x13c/0x4e0
+[    4.645727]  __arm_lpae_map+0x13c/0x4e0
+[    4.645950]  arm_lpae_map_pages+0x15c/0x190
+[    4.646171]  arm_lpae_map+0x20/0x30
+[    4.646355]  _iopgtbl_map_page_to_range+0x94/0xf4
+[    4.646628]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[    4.646904]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[    4.647147]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[    4.647404]  process_one_work+0x1bc/0x4b0
+[    4.647643]  worker_thread+0x6c/0x43c
+[    4.647847]  kthread+0x150/0x154
+[    4.648026]  ret_from_fork+0x10/0x34
+[    4.648196] ---[ end trace 71da18ce5ef17934 ]---
+[+] UAF  attempt=4 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[    4.957397] testgpu: memwrite dst=0x4000040000 phys=0x41880000 value=0xcafebabe
+[    4.957774] testgpu: memwrite done phys=0x41880000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[    6.359303] ------------[ cut here ]------------
+[    6.359816] WARNING: CPU: 1 PID: 17 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[    6.360325] Modules linked in:
+[    6.360591] CPU: 1 PID: 17 Comm: kworker/1:0 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[    6.361005] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[    6.361565] Workqueue: events kgsl_sharedmem_bind_worker
+[    6.361882] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[    6.362176] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[    6.362435] lr : __arm_lpae_map+0x3b8/0x4e0
+[    6.362666] sp : ffff80000a0d3820
+[    6.362820] x29: ffff80000a0d3820 x28: ffff0000057ed000 
+[    6.363066] x27: 0060000000000e40 x26: 0000000043094000 
+[    6.363326] x25: 0000000000001000 x24: 0000004000040000 
+[    6.363788] x23: 0000000000001000 x22: 0000000000000000 
+[    6.364073] x21: 0000000000000001 x20: 0000000000000003 
+[    6.364453] x19: 0000000000000001 x18: 0000000000000000 
+[    6.364730] x17: 0000000000000000 x16: 0000000000000000 
+[    6.365022] x15: 00000000f5257d14 x14: 0000000000000001 
+[    6.365424] x13: 0000000000000307 x12: ffff000003e76200 
+[    6.365741] x11: 0000000000001000 x10: ffff0000057ed208 
+[    6.366014] x9 : 0060000041920e43 x8 : ffff0000057ed208 
+[    6.366409] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[    6.366763] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[    6.367020] x3 : 0000000000000003 x2 : 0060000000000e40 
+[    6.367326] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[    6.368620] Call trace:
+[    6.368767]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[    6.368981]  __arm_lpae_map+0x3b8/0x4e0
+[    6.369174]  __arm_lpae_map+0x13c/0x4e0
+[    6.369497]  __arm_lpae_map+0x13c/0x4e0
+[    6.369709]  __arm_lpae_map+0x13c/0x4e0
+[    6.369900]  arm_lpae_map_pages+0x15c/0x190
+[    6.370099]  arm_lpae_map+0x20/0x30
+[    6.370492]  _iopgtbl_map_page_to_range+0x94/0xf4
+[    6.370662]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[    6.370815]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[    6.370955]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[    6.371090]  process_one_work+0x1bc/0x4b0
+[    6.371219]  worker_thread+0x6c/0x43c
+[    6.371695]  kthread+0x150/0x154
+[    6.371961]  ret_from_fork+0x10/0x34
+[    6.372318] ---[ end trace 71da18ce5ef17935 ]---
+[+] UAF  attempt=9 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[    6.683446] testgpu: memwrite dst=0x4000040000 phys=0x41920000 value=0xcafebabe
+[    6.683798] testgpu: memwrite done phys=0x41920000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[    7.394820] ------------[ cut here ]------------
+[    7.395147] WARNING: CPU: 2 PID: 102 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[    7.395736] Modules linked in:
+[    7.396022] CPU: 2 PID: 102 Comm: kworker/2:2 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[    7.396460] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[    7.396879] Workqueue: events kgsl_sharedmem_bind_worker
+[    7.397149] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[    7.397544] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[    7.397931] lr : __arm_lpae_map+0x3b8/0x4e0
+[    7.398153] sp : ffff80000a3d3820
+[    7.398465] x29: ffff80000a3d3820 x28: ffff0000057ed000 
+[    7.398855] x27: 0060000000000e40 x26: 0000000043094000 
+[    7.399126] x25: 0000000000001000 x24: 0000004000040000 
+[    7.399588] x23: 0000000000001000 x22: 0000000000000000 
+[    7.399879] x21: 0000000000000001 x20: 0000000000000003 
+[    7.400152] x19: 0000000000000001 x18: 0000000000000000 
+[    7.400441] x17: 0000000000000000 x16: 0000000000000000 
+[    7.400728] x15: 00000000d744fcc9 x14: 0000000000000001 
+[    7.400999] x13: 0000000000000152 x12: ffff000003e76200 
+[    7.401481] x11: 0000000000001000 x10: ffff0000057ed208 
+[    7.401765] x9 : 0060000041920e43 x8 : ffff0000057ed208 
+[    7.402035] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[    7.402456] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[    7.402823] x3 : 0000000000000003 x2 : 0060000000000e40 
+[    7.403092] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[    7.403386] Call trace:
+[    7.403518]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[    7.403787]  __arm_lpae_map+0x3b8/0x4e0
+[    7.403980]  __arm_lpae_map+0x13c/0x4e0
+[    7.404167]  __arm_lpae_map+0x13c/0x4e0
+[    7.404353]  __arm_lpae_map+0x13c/0x4e0
+[    7.404551]  arm_lpae_map_pages+0x15c/0x190
+[    7.404912]  arm_lpae_map+0x20/0x30
+[    7.405119]  _iopgtbl_map_page_to_range+0x94/0xf4
+[    7.405501]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[    7.405776]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[    7.406024]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[    7.406278]  process_one_work+0x1bc/0x4b0
+[    7.406480]  worker_thread+0x6c/0x43c
+[    7.406689]  kthread+0x150/0x154
+[    7.406869]  ret_from_fork+0x10/0x34
+[    7.407230] ---[ end trace 71da18ce5ef17936 ]---
+[+] UAF  attempt=12 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[    7.718016] testgpu: memwrite dst=0x4000040000 phys=0x41920000 value=0xcafebabe
+[    7.718365] testgpu: memwrite done phys=0x41920000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[    8.046503] testgpu_ringbuffer_submitcmd: 77 callbacks suppressed
+[    8.435474] ------------[ cut here ]------------
+[    8.435780] WARNING: CPU: 2 PID: 102 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[    8.436185] Modules linked in:
+[    8.436462] CPU: 2 PID: 102 Comm: kworker/2:2 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[    8.436851] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[    8.437103] Workqueue: events kgsl_sharedmem_bind_worker
+[    8.437337] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[    8.437596] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[    8.437803] lr : __arm_lpae_map+0x1bc/0x4e0
+[    8.437971] sp : ffff80000a3d3730
+[    8.438110] x29: ffff80000a3d3730 x28: ffff0000057ed000 
+[    8.438341] x27: 0060000000000e40 x26: 0000000041920000 
+[    8.438634] x25: 0000000000200000 x24: 0000004000040000 
+[    8.439021] x23: 0000000000001000 x22: ffff80000a3d3af8 
+[    8.439405] x21: 0000000000000001 x20: 0000000000000003 
+[    8.439717] x19: 0000000000000001 x18: ffff000002f2f520 
+[    8.440046] x17: 0000000000000000 x16: 0000000000000fff 
+[    8.440423] x15: 0000004041960000 x14: fffffdfffee00000 
+[    8.440673] x13: 0000000000000000 x12: ffff000003e76200 
+[    8.440901] x11: 0000000000001000 x10: ffff0000057ed208 
+[    8.441125] x9 : 0060000043094e43 x8 : ffff0000057ed208 
+[    8.441349] x7 : 0000000000000000 x6 : ffff0000057c5000 
+[    8.441686] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[    8.441942] x3 : 0000000000000003 x2 : 0060000000000e40 
+[    8.442163] x1 : 0000000041920000 x0 : ffff0000056ce900 
+[    8.442382] Call trace:
+[    8.442496]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[    8.442701]  __arm_lpae_map+0x1bc/0x4e0
+[    8.442944]  __arm_lpae_map+0x13c/0x4e0
+[    8.443110]  __arm_lpae_map+0x13c/0x4e0
+[    8.443268]  __arm_lpae_map+0x13c/0x4e0
+[    8.443422]  arm_lpae_map_sg+0x308/0x47c
+[    8.443607]  _iopgtbl_map_sg+0x70/0x1c0
+[    8.443772]  kgsl_iopgtbl_map_child+0xa8/0x1c0
+[    8.443959]  kgsl_mmu_map_child+0x40/0xb4
+[    8.444130]  kgsl_sharedmem_bind_worker+0x4a4/0x98c
+[    8.444333]  process_one_work+0x1bc/0x4b0
+[    8.444501]  worker_thread+0x6c/0x43c
+[    8.444722]  kthread+0x150/0x154
+[    8.444873]  ret_from_fork+0x10/0x34
+[    8.445022] ---[ end trace 71da18ce5ef17937 ]---
+[    8.793057] ------------[ cut here ]------------
+[    8.793538] WARNING: CPU: 3 PID: 32 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[    8.794057] Modules linked in:
+[    8.794261] CPU: 3 PID: 32 Comm: kworker/3:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[    8.794901] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[    8.795185] Workqueue: events kgsl_sharedmem_bind_worker
+[    8.795661] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[    8.796588] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[    8.796827] lr : __arm_lpae_map+0x3b8/0x4e0
+[    8.796992] sp : ffff80000a14b820
+[    8.797113] x29: ffff80000a14b820 x28: ffff0000057ed000 
+[    8.797503] x27: 0060000000000e40 x26: 0000000043094000 
+[    8.797821] x25: 0000000000001000 x24: 0000004000040000 
+[    8.798084] x23: 0000000000001000 x22: 0000000000000000 
+[    8.798493] x21: 0000000000000001 x20: 0000000000000003 
+[    8.798773] x19: 0000000000000001 x18: 0000000000000000 
+[    8.799033] x17: 0000000000000000 x16: 0000000000000000 
+[    8.799456] x15: 00000000b123f581 x14: 0000000000000001 
+[    8.799752] x13: 0000000000000369 x12: ffff000003e76200 
+[    8.800020] x11: 0000000000001000 x10: ffff0000057ed208 
+[    8.800283] x9 : 0060000041920e43 x8 : ffff0000057ed208 
+[    8.800762] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[    8.801005] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[    8.801441] x3 : 0000000000000003 x2 : 0060000000000e40 
+[    8.801751] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[    8.802011] Call trace:
+[    8.802152]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[    8.802380]  __arm_lpae_map+0x3b8/0x4e0
+[    8.802750]  __arm_lpae_map+0x13c/0x4e0
+[    8.802944]  __arm_lpae_map+0x13c/0x4e0
+[    8.803136]  __arm_lpae_map+0x13c/0x4e0
+[    8.803509]  arm_lpae_map_pages+0x15c/0x190
+[    8.803758]  arm_lpae_map+0x20/0x30
+[    8.803957]  _iopgtbl_map_page_to_range+0x94/0xf4
+[    8.804208]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[    8.804688]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[    8.804929]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[    8.805169]  process_one_work+0x1bc/0x4b0
+[    8.805530]  worker_thread+0x6c/0x43c
+[    8.805748]  kthread+0x150/0x154
+[    8.805917]  ret_from_fork+0x10/0x34
+[    8.806100] ---[ end trace 71da18ce5ef17938 ]---
+[+] UAF  attempt=16 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[    9.117109] testgpu: memwrite dst=0x4000040000 phys=0x41920000 value=0xcafebabe
+[    9.117478] testgpu: memwrite done phys=0x41920000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[    9.130893] ------------[ cut here ]------------
+[    9.131354] WARNING: CPU: 0 PID: 34 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[    9.131842] Modules linked in:
+[    9.132066] CPU: 0 PID: 34 Comm: kworker/0:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[    9.132602] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[    9.133170] Workqueue: events kgsl_sharedmem_bind_worker
+[    9.133565] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[    9.133869] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[    9.134106] lr : __arm_lpae_map+0x3b8/0x4e0
+[    9.134304] sp : ffff80000a15b820
+[    9.134682] x29: ffff80000a15b820 x28: ffff0000057ed000 
+[    9.134842] x27: 0060000000000e40 x26: 0000000043094000 
+[    9.134993] x25: 0000000000001000 x24: 0000004000040000 
+[    9.135142] x23: 0000000000001000 x22: 0000000000000000 
+[    9.135639] x21: 0000000000000001 x20: 0000000000000003 
+[    9.135902] x19: 0000000000000001 x18: 0000000000000000 
+[    9.136089] x17: 0000000000000000 x16: 0000000000000000 
+[    9.136452] x15: 00000000b8fbaf46 x14: 0000000000000001 
+[    9.136812] x13: 00000000000003e3 x12: ffff000003e76200 
+[    9.137635] x11: 0000000000001000 x10: ffff0000057ed208 
+[    9.137912] x9 : 0060000041920e43 x8 : ffff0000057ed208 
+[    9.138213] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[    9.138466] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[    9.138727] x3 : 0000000000000003 x2 : 0060000000000e40 
+[    9.138993] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[    9.139269] Call trace:
+[    9.139420]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[    9.139671]  __arm_lpae_map+0x3b8/0x4e0
+[    9.139870]  __arm_lpae_map+0x13c/0x4e0
+[    9.140063]  __arm_lpae_map+0x13c/0x4e0
+[    9.140256]  __arm_lpae_map+0x13c/0x4e0
+[    9.140450]  arm_lpae_map_pages+0x15c/0x190
+[    9.140693]  arm_lpae_map+0x20/0x30
+[    9.140872]  _iopgtbl_map_page_to_range+0x94/0xf4
+[    9.141101]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[    9.141357]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[    9.141625]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[    9.141863]  process_one_work+0x1bc/0x4b0
+[    9.142060]  worker_thread+0x6c/0x43c
+[    9.142251]  kthread+0x150/0x154
+[    9.142424]  ret_from_fork+0x10/0x34
+[    9.142632] ---[ end trace 71da18ce5ef17939 ]---
+[+] UAF  attempt=17 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[    9.451780] testgpu: memwrite dst=0x4000040000 phys=0x41920000 value=0xcafebabe
+[    9.452003] testgpu: memwrite done phys=0x41920000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[    9.465723] ------------[ cut here ]------------
+[    9.466046] WARNING: CPU: 3 PID: 32 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[    9.466463] Modules linked in:
+[    9.466843] CPU: 3 PID: 32 Comm: kworker/3:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[    9.467250] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[    9.468165] Workqueue: events kgsl_sharedmem_bind_worker
+[    9.468518] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[    9.469032] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[    9.469625] lr : __arm_lpae_map+0x3b8/0x4e0
+[    9.469873] sp : ffff80000a14b820
+[    9.470040] x29: ffff80000a14b820 x28: ffff0000057ed000 
+[    9.470505] x27: 0060000000000e40 x26: 0000000043094000 
+[    9.470797] x25: 0000000000001000 x24: 0000004000040000 
+[    9.471071] x23: 0000000000001000 x22: 0000000000000000 
+[    9.471604] x21: 0000000000000001 x20: 0000000000000003 
+[    9.471880] x19: 0000000000000001 x18: 0000000000000000 
+[    9.472135] x17: 0000000000000000 x16: 0000000000000000 
+[    9.472682] x15: 0000b6658b644128 x14: 0000000000000001 
+[    9.472955] x13: 0000000000000057 x12: ffff000003e76200 
+[    9.473233] x11: 0000000000001000 x10: ffff0000057ed208 
+[    9.473522] x9 : 0060000041920e43 x8 : ffff0000057ed208 
+[    9.473806] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[    9.474067] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[    9.474406] x3 : 0000000000000003 x2 : 0060000000000e40 
+[    9.474775] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[    9.475039] Call trace:
+[    9.475186]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[    9.475612]  __arm_lpae_map+0x3b8/0x4e0
+[    9.475819]  __arm_lpae_map+0x13c/0x4e0
+[    9.476005]  __arm_lpae_map+0x13c/0x4e0
+[    9.476814]  __arm_lpae_map+0x13c/0x4e0
+[    9.476956]  arm_lpae_map_pages+0x15c/0x190
+[    9.477074]  arm_lpae_map+0x20/0x30
+[    9.477177]  _iopgtbl_map_page_to_range+0x94/0xf4
+[    9.477401]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[    9.477685]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[    9.477927]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[    9.478166]  process_one_work+0x1bc/0x4b0
+[    9.478381]  worker_thread+0x6c/0x43c
+[    9.478761]  kthread+0x150/0x154
+[    9.478938]  ret_from_fork+0x10/0x34
+[    9.479122] ---[ end trace 71da18ce5ef1793a ]---
+[+] UAF  attempt=18 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[    9.788958] testgpu: memwrite dst=0x4000040000 phys=0x41920000 value=0xcafebabe
+[    9.789476] testgpu: memwrite done phys=0x41920000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[    9.805099] ------------[ cut here ]------------
+[    9.805631] WARNING: CPU: 3 PID: 32 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[    9.806065] Modules linked in:
+[    9.806295] CPU: 3 PID: 32 Comm: kworker/3:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[    9.806884] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[    9.807175] Workqueue: events kgsl_sharedmem_bind_worker
+[    9.807594] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[    9.807877] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[    9.808115] lr : __arm_lpae_map+0x3b8/0x4e0
+[    9.808425] sp : ffff80000a14b820
+[    9.808591] x29: ffff80000a14b820 x28: ffff0000057ed000 
+[    9.809000] x27: 0060000000000e40 x26: 0000000043094000 
+[    9.809283] x25: 0000000000001000 x24: 0000004000040000 
+[    9.809701] x23: 0000000000001000 x22: 0000000000000000 
+[    9.809955] x21: 0000000000000001 x20: 0000000000000003 
+[    9.810193] x19: 0000000000000001 x18: 0000000000000000 
+[    9.810553] x17: 0000000000000000 x16: 0000000e48078689 
+[    9.810896] x15: 0000b4d25f706a50 x14: 0000000000000001 
+[    9.811170] x13: 0000000000000002 x12: ffff000003e76200 
+[    9.811561] x11: 0000000000001000 x10: ffff0000057ed208 
+[    9.811849] x9 : 0060000041920e43 x8 : ffff0000057ed208 
+[    9.812129] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[    9.812509] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[    9.812755] x3 : 0000000000000003 x2 : 0060000000000e40 
+[    9.813022] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[    9.813314] Call trace:
+[    9.813595]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[    9.813821]  __arm_lpae_map+0x3b8/0x4e0
+[    9.814016]  __arm_lpae_map+0x13c/0x4e0
+[    9.814208]  __arm_lpae_map+0x13c/0x4e0
+[    9.814688]  __arm_lpae_map+0x13c/0x4e0
+[    9.814865]  arm_lpae_map_pages+0x15c/0x190
+[    9.815032]  arm_lpae_map+0x20/0x30
+[    9.815191]  _iopgtbl_map_page_to_range+0x94/0xf4
+[    9.815466]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[    9.815735]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[    9.815985]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[    9.816258]  process_one_work+0x1bc/0x4b0
+[    9.816562]  worker_thread+0x6c/0x43c
+[    9.816790]  kthread+0x150/0x154
+[    9.816961]  ret_from_fork+0x10/0x34
+[    9.817144] ---[ end trace 71da18ce5ef1793b ]---
+[+] UAF  attempt=19 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   10.134090] testgpu: memwrite dst=0x4000040000 phys=0x41920000 value=0xcafebabe
+[   10.134628] testgpu: memwrite done phys=0x41920000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   10.491675] ------------[ cut here ]------------
+[   10.492021] WARNING: CPU: 3 PID: 32 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   10.492753] Modules linked in:
+[   10.492959] CPU: 3 PID: 32 Comm: kworker/3:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   10.493381] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   10.493692] Workqueue: events kgsl_sharedmem_bind_worker
+[   10.493951] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   10.494221] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   10.494455] lr : __arm_lpae_map+0x3b8/0x4e0
+[   10.494679] sp : ffff80000a14b820
+[   10.494844] x29: ffff80000a14b820 x28: ffff0000057ed000 
+[   10.495102] x27: 0060000000000e40 x26: 0000000043094000 
+[   10.495378] x25: 0000000000001000 x24: 0000004000040000 
+[   10.495951] x23: 0000000000001000 x22: 0000000000000000 
+[   10.496338] x21: 0000000000000001 x20: 0000000000000003 
+[   10.496634] x19: 0000000000000001 x18: 0000000000000000 
+[   10.496901] x17: 0000000000000000 x16: 0000000000000000 
+[   10.497170] x15: 0000b44b547200cc x14: 0000000000000001 
+[   10.497436] x13: 00000000000000b2 x12: ffff000003e76200 
+[   10.497746] x11: 0000000000001000 x10: ffff0000057ed208 
+[   10.498004] x9 : 0060000041920e43 x8 : ffff0000057ed208 
+[   10.498263] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[   10.498532] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   10.499085] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   10.499643] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[   10.499946] Call trace:
+[   10.500088]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   10.500448]  __arm_lpae_map+0x3b8/0x4e0
+[   10.500673]  __arm_lpae_map+0x13c/0x4e0
+[   10.500866]  __arm_lpae_map+0x13c/0x4e0
+[   10.501064]  __arm_lpae_map+0x13c/0x4e0
+[   10.501253]  arm_lpae_map_pages+0x15c/0x190
+[   10.501456]  arm_lpae_map+0x20/0x30
+[   10.501663]  _iopgtbl_map_page_to_range+0x94/0xf4
+[   10.501919]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[   10.502181]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[   10.502442]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[   10.502861]  process_one_work+0x1bc/0x4b0
+[   10.503070]  worker_thread+0x6c/0x43c
+[   10.503288]  kthread+0x150/0x154
+[   10.503682]  ret_from_fork+0x10/0x34
+[   10.503793] ---[ end trace 71da18ce5ef1793c ]---
+[+] UAF  attempt=21 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   10.813037] testgpu: memwrite dst=0x4000040000 phys=0x41920000 value=0xcafebabe
+[   10.813611] testgpu: memwrite done phys=0x41920000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   11.873873] ------------[ cut here ]------------
+[   11.874164] WARNING: CPU: 0 PID: 34 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   11.874680] Modules linked in:
+[   11.874876] CPU: 0 PID: 34 Comm: kworker/0:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   11.875271] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   11.875553] Workqueue: events kgsl_sharedmem_bind_worker
+[   11.875845] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   11.876036] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   11.876174] lr : __arm_lpae_map+0x1bc/0x4e0
+[   11.876415] sp : ffff80000a15b730
+[   11.876872] x29: ffff80000a15b730 x28: ffff0000057ed000 
+[   11.877146] x27: 0060000000000e40 x26: 0000000041920000 
+[   11.877502] x25: 0000000000200000 x24: 0000004000040000 
+[   11.877811] x23: 0000000000001000 x22: ffff80000a15baf8 
+[   11.878245] x21: 0000000000000001 x20: 0000000000000003 
+[   11.878442] x19: 0000000000000001 x18: ffff0000018c00a0 
+[   11.878646] x17: 0000000000000000 x16: 0000000000000fff 
+[   11.878849] x15: 0000004041960000 x14: fffffdfffee00000 
+[   11.879049] x13: 0000000000000000 x12: ffff000003e76200 
+[   11.879203] x11: 0000000000001000 x10: ffff0000057ed208 
+[   11.879414] x9 : 0060000043094e43 x8 : ffff0000057ed208 
+[   11.879596] x7 : 0000000000000000 x6 : ffff0000057c5000 
+[   11.879751] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   11.879934] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   11.880139] x1 : 0000000041920000 x0 : ffff0000056ce900 
+[   11.882479] Call trace:
+[   11.882875]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   11.883076]  __arm_lpae_map+0x1bc/0x4e0
+[   11.883245]  __arm_lpae_map+0x13c/0x4e0
+[   11.883403]  __arm_lpae_map+0x13c/0x4e0
+[   11.883559]  __arm_lpae_map+0x13c/0x4e0
+[   11.883746]  arm_lpae_map_sg+0x308/0x47c
+[   11.883921]  _iopgtbl_map_sg+0x70/0x1c0
+[   11.884089]  kgsl_iopgtbl_map_child+0xa8/0x1c0
+[   11.884337]  kgsl_mmu_map_child+0x40/0xb4
+[   11.884517]  kgsl_sharedmem_bind_worker+0x4a4/0x98c
+[   11.885062]  process_one_work+0x1bc/0x4b0
+[   11.885190]  worker_thread+0x6c/0x43c
+[   11.885296]  kthread+0x150/0x154
+[   11.885390]  ret_from_fork+0x10/0x34
+[   11.885492] ---[ end trace 71da18ce5ef1793d ]---
+[   12.577633] ------------[ cut here ]------------
+[   12.577920] WARNING: CPU: 3 PID: 32 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   12.578466] Modules linked in:
+[   12.578669] CPU: 3 PID: 32 Comm: kworker/3:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   12.579078] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   12.579722] Workqueue: events kgsl_sharedmem_bind_worker
+[   12.580180] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   12.580459] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   12.580721] lr : __arm_lpae_map+0x3b8/0x4e0
+[   12.580924] sp : ffff80000a14b820
+[   12.581091] x29: ffff80000a14b820 x28: ffff0000057ed000 
+[   12.581287] x27: 0060000000000e40 x26: 0000000043094000 
+[   12.581468] x25: 0000000000001000 x24: 0000004000040000 
+[   12.581743] x23: 0000000000001000 x22: 0000000000000000 
+[   12.582003] x21: 0000000000000001 x20: 0000000000000003 
+[   12.582260] x19: 0000000000000001 x18: 0000000000000000 
+[   12.582525] x17: 0000000000000000 x16: 0000000000000000 
+[   12.582757] x15: 00000000d2a81d91 x14: 0000000000000001 
+[   12.583035] x13: 0000000000000330 x12: ffff000003e76200 
+[   12.583290] x11: 0000000000001000 x10: ffff0000057ed208 
+[   12.583531] x9 : 00600000418a0e43 x8 : ffff0000057ed208 
+[   12.583807] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[   12.584061] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   12.584313] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   12.584562] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[   12.584837] Call trace:
+[   12.584980]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   12.585202]  __arm_lpae_map+0x3b8/0x4e0
+[   12.585400]  __arm_lpae_map+0x13c/0x4e0
+[   12.585614]  __arm_lpae_map+0x13c/0x4e0
+[   12.585811]  __arm_lpae_map+0x13c/0x4e0
+[   12.586005]  arm_lpae_map_pages+0x15c/0x190
+[   12.586209]  arm_lpae_map+0x20/0x30
+[   12.586394]  _iopgtbl_map_page_to_range+0x94/0xf4
+[   12.586648]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[   12.586915]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[   12.587160]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[   12.587401]  process_one_work+0x1bc/0x4b0
+[   12.587622]  worker_thread+0x6c/0x43c
+[   12.587819]  kthread+0x150/0x154
+[   12.587989]  ret_from_fork+0x10/0x34
+[   12.588172] ---[ end trace 71da18ce5ef1793e ]---
+[+] UAF  attempt=27 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   12.898674] testgpu: memwrite dst=0x4000040000 phys=0x418a0000 value=0xcafebabe
+[   12.899021] testgpu: memwrite done phys=0x418a0000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   13.221488] testgpu_ringbuffer_submitcmd: 80 callbacks suppressed
+[   13.258038] ------------[ cut here ]------------
+[   13.258468] WARNING: CPU: 0 PID: 34 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   13.258935] Modules linked in:
+[   13.259140] CPU: 0 PID: 34 Comm: kworker/0:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   13.259780] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   13.260086] Workqueue: events kgsl_sharedmem_bind_worker
+[   13.261985] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   13.262313] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   13.262534] lr : __arm_lpae_map+0x3b8/0x4e0
+[   13.263078] sp : ffff80000a15b820
+[   13.263461] x29: ffff80000a15b820 x28: ffff0000057ed000 
+[   13.263981] x27: 0060000000000e40 x26: 0000000043094000 
+[   13.264265] x25: 0000000000001000 x24: 0000004000040000 
+[   13.264530] x23: 0000000000001000 x22: 0000000000000000 
+[   13.265088] x21: 0000000000000001 x20: 0000000000000003 
+[   13.265520] x19: 0000000000000001 x18: 0000000000000000 
+[   13.265848] x17: 0000000000000000 x16: 0000000000000000 
+[   13.266117] x15: 0000b4b4097dc1ea x14: 0000000000000001 
+[   13.266514] x13: 0000000000000063 x12: ffff000003e76200 
+[   13.266776] x11: 0000000000001000 x10: ffff0000057ed208 
+[   13.267059] x9 : 00600000418a0e43 x8 : ffff0000057ed208 
+[   13.267353] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[   13.267641] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   13.267896] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   13.268102] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[   13.268257] Call trace:
+[   13.268336]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   13.268463]  __arm_lpae_map+0x3b8/0x4e0
+[   13.268806]  __arm_lpae_map+0x13c/0x4e0
+[   13.268949]  __arm_lpae_map+0x13c/0x4e0
+[   13.269093]  __arm_lpae_map+0x13c/0x4e0
+[   13.269376]  arm_lpae_map_pages+0x15c/0x190
+[   13.269645]  arm_lpae_map+0x20/0x30
+[   13.269825]  _iopgtbl_map_page_to_range+0x94/0xf4
+[   13.270049]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[   13.270780]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[   13.271158]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[   13.272035]  process_one_work+0x1bc/0x4b0
+[   13.272290]  worker_thread+0x6c/0x43c
+[   13.272692]  kthread+0x150/0x154
+[   13.272910]  ret_from_fork+0x10/0x34
+[   13.273099] ---[ end trace 71da18ce5ef1793f ]---
+[+] UAF  attempt=29 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   13.593936] testgpu: memwrite dst=0x4000040000 phys=0x418a0000 value=0xcafebabe
+[   13.594492] testgpu: memwrite done phys=0x418a0000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   13.612004] ------------[ cut here ]------------
+[   13.612434] WARNING: CPU: 0 PID: 34 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   13.612885] Modules linked in:
+[   13.613097] CPU: 0 PID: 34 Comm: kworker/0:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   13.613626] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   13.614011] Workqueue: events kgsl_sharedmem_bind_worker
+[   13.614294] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   13.614598] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   13.615027] lr : __arm_lpae_map+0x3b8/0x4e0
+[   13.615237] sp : ffff80000a15b820
+[   13.615640] x29: ffff80000a15b820 x28: ffff0000057ed000 
+[   13.616033] x27: 0060000000000e40 x26: 0000000043094000 
+[   13.616203] x25: 0000000000001000 x24: 0000004000040000 
+[   13.616532] x23: 0000000000001000 x22: 0000000000000000 
+[   13.616814] x21: 0000000000000001 x20: 0000000000000003 
+[   13.617073] x19: 0000000000000001 x18: 0000000000000000 
+[   13.617333] x17: 0000000000000000 x16: 0000000bfffffff4 
+[   13.617635] x15: 0000b61068a27912 x14: 0000000000000001 
+[   13.617901] x13: 0000000000000163 x12: ffff000003e76200 
+[   13.618161] x11: 0000000000001000 x10: ffff0000057ed208 
+[   13.618423] x9 : 00600000418a0e43 x8 : ffff0000057ed208 
+[   13.618707] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[   13.618965] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   13.619223] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   13.619478] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[   13.620352] Call trace:
+[   13.620495]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   13.620740]  __arm_lpae_map+0x3b8/0x4e0
+[   13.620930]  __arm_lpae_map+0x13c/0x4e0
+[   13.621119]  __arm_lpae_map+0x13c/0x4e0
+[   13.621313]  __arm_lpae_map+0x13c/0x4e0
+[   13.621507]  arm_lpae_map_pages+0x15c/0x190
+[   13.621736]  arm_lpae_map+0x20/0x30
+[   13.621921]  _iopgtbl_map_page_to_range+0x94/0xf4
+[   13.622149]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[   13.622406]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[   13.622672]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[   13.622909]  process_one_work+0x1bc/0x4b0
+[   13.623107]  worker_thread+0x6c/0x43c
+[   13.623298]  kthread+0x150/0x154
+[   13.623476]  ret_from_fork+0x10/0x34
+[   13.623683] ---[ end trace 71da18ce5ef17940 ]---
+[+] UAF  attempt=30 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   13.934626] testgpu: memwrite dst=0x4000040000 phys=0x418a0000 value=0xcafebabe
+[   13.934955] testgpu: memwrite done phys=0x418a0000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   15.669649] ------------[ cut here ]------------
+[   15.669950] WARNING: CPU: 0 PID: 34 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   15.670429] Modules linked in:
+[   15.670718] CPU: 0 PID: 34 Comm: kworker/0:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   15.671125] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   15.671412] Workqueue: events kgsl_sharedmem_bind_worker
+[   15.671793] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   15.672070] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   15.672416] lr : __arm_lpae_map+0x3b8/0x4e0
+[   15.672795] sp : ffff80000a15b820
+[   15.673121] x29: ffff80000a15b820 x28: ffff0000057ed000 
+[   15.673395] x27: 0060000000000e40 x26: 0000000043094000 
+[   15.674167] x25: 0000000000001000 x24: 0000004000040000 
+[   15.674668] x23: 0000000000001000 x22: 0000000000000000 
+[   15.674918] x21: 0000000000000001 x20: 0000000000000003 
+[   15.675177] x19: 0000000000000001 x18: 0000000000000000 
+[   15.675715] x17: 0000000000000000 x16: 0000000000000000 
+[   15.675984] x15: 00000000fa83b2da x14: 0000000000000001 
+[   15.676783] x13: 00000000000003cb x12: ffff000003e76200 
+[   15.677066] x11: 0000000000001000 x10: ffff0000057ed208 
+[   15.677220] x9 : 00600000418a0e43 x8 : ffff0000057ed208 
+[   15.677369] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[   15.677518] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   15.677770] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   15.678030] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[   15.678199] Call trace:
+[   15.678458]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   15.678705]  __arm_lpae_map+0x3b8/0x4e0
+[   15.678894]  __arm_lpae_map+0x13c/0x4e0
+[   15.679080]  __arm_lpae_map+0x13c/0x4e0
+[   15.679533]  __arm_lpae_map+0x13c/0x4e0
+[   15.679763]  arm_lpae_map_pages+0x15c/0x190
+[   15.679965]  arm_lpae_map+0x20/0x30
+[   15.680134]  _iopgtbl_map_page_to_range+0x94/0xf4
+[   15.680932]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[   15.682029]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[   15.682254]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[   15.682700]  process_one_work+0x1bc/0x4b0
+[   15.683827]  worker_thread+0x6c/0x43c
+[   15.684106]  kthread+0x150/0x154
+[   15.684315]  ret_from_fork+0x10/0x34
+[   15.684589] ---[ end trace 71da18ce5ef17941 ]---
+[+] UAF  attempt=36 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   15.995238] testgpu: memwrite dst=0x4000040000 phys=0x418a0000 value=0xcafebabe
+[   15.995682] testgpu: memwrite done phys=0x418a0000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   17.065743] ------------[ cut here ]------------
+[   17.066117] WARNING: CPU: 3 PID: 32 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   17.066950] Modules linked in:
+[   17.067171] CPU: 3 PID: 32 Comm: kworker/3:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   17.067805] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   17.068095] Workqueue: events kgsl_sharedmem_bind_worker
+[   17.068373] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   17.068687] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   17.068932] lr : __arm_lpae_map+0x3b8/0x4e0
+[   17.069136] sp : ffff80000a14b820
+[   17.069307] x29: ffff80000a14b820 x28: ffff0000057ed000 
+[   17.069822] x27: 0060000000000e40 x26: 0000000043094000 
+[   17.070080] x25: 0000000000001000 x24: 0000004000040000 
+[   17.070349] x23: 0000000000001000 x22: 0000000000000000 
+[   17.070726] x21: 0000000000000001 x20: 0000000000000003 
+[   17.070982] x19: 0000000000000001 x18: 0000000000000000 
+[   17.071246] x17: 0000000000000000 x16: 0000000000000000 
+[   17.071634] x15: 00000000d744fcc9 x14: 0000000000000001 
+[   17.071914] x13: 0000000000000291 x12: ffff000003e76200 
+[   17.072187] x11: 0000000000001000 x10: ffff0000057ed208 
+[   17.072855] x9 : 00600000418a0e43 x8 : ffff0000057ed208 
+[   17.073124] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[   17.073408] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   17.073687] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   17.073950] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[   17.074213] Call trace:
+[   17.074340]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   17.074532]  __arm_lpae_map+0x3b8/0x4e0
+[   17.074722]  __arm_lpae_map+0x13c/0x4e0
+[   17.074913]  __arm_lpae_map+0x13c/0x4e0
+[   17.075388]  __arm_lpae_map+0x13c/0x4e0
+[   17.075631]  arm_lpae_map_pages+0x15c/0x190
+[   17.075834]  arm_lpae_map+0x20/0x30
+[   17.076013]  _iopgtbl_map_page_to_range+0x94/0xf4
+[   17.076239]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[   17.076498]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[   17.076874]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[   17.077119]  process_one_work+0x1bc/0x4b0
+[   17.077322]  worker_thread+0x6c/0x43c
+[   17.077651]  kthread+0x150/0x154
+[   17.077824]  ret_from_fork+0x10/0x34
+[   17.078002] ---[ end trace 71da18ce5ef17942 ]---
+[+] UAF  attempt=40 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   17.387684] testgpu: memwrite dst=0x4000040000 phys=0x418a0000 value=0xcafebabe
+[   17.388036] testgpu: memwrite done phys=0x418a0000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   17.752736] ------------[ cut here ]------------
+[   17.753085] WARNING: CPU: 3 PID: 32 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   17.753495] Modules linked in:
+[   17.753896] CPU: 3 PID: 32 Comm: kworker/3:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   17.754740] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   17.755043] Workqueue: events kgsl_sharedmem_bind_worker
+[   17.755368] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   17.755878] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   17.756124] lr : __arm_lpae_map+0x3b8/0x4e0
+[   17.756626] sp : ffff80000a14b820
+[   17.756789] x29: ffff80000a14b820 x28: ffff0000057ed000 
+[   17.757020] x27: 0060000000000e40 x26: 0000000043094000 
+[   17.757302] x25: 0000000000001000 x24: 0000004000040000 
+[   17.757683] x23: 0000000000001000 x22: 0000000000000000 
+[   17.757966] x21: 0000000000000001 x20: 0000000000000003 
+[   17.758246] x19: 0000000000000001 x18: 0000000000000000 
+[   17.758845] x17: 0000000000000000 x16: 0000000000000000 
+[   17.759168] x15: 0000b61c26cedb4a x14: 0000000000000001 
+[   17.759543] x13: 0000000000000010 x12: ffff000003e76200 
+[   17.759863] x11: 0000000000001000 x10: ffff0000057ed208 
+[   17.760147] x9 : 00600000418a0e43 x8 : ffff0000057ed208 
+[   17.760551] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[   17.760846] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   17.761110] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   17.762199] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[   17.762476] Call trace:
+[   17.762635]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   17.762852]  __arm_lpae_map+0x3b8/0x4e0
+[   17.763040]  __arm_lpae_map+0x13c/0x4e0
+[   17.763227]  __arm_lpae_map+0x13c/0x4e0
+[   17.763411]  __arm_lpae_map+0x13c/0x4e0
+[   17.763620]  arm_lpae_map_pages+0x15c/0x190
+[   17.763835]  arm_lpae_map+0x20/0x30
+[   17.764011]  _iopgtbl_map_page_to_range+0x94/0xf4
+[   17.764258]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[   17.764512]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[   17.765872]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[   17.766464]  process_one_work+0x1bc/0x4b0
+[   17.766696]  worker_thread+0x6c/0x43c
+[   17.766820]  kthread+0x150/0x154
+[   17.766918]  ret_from_fork+0x10/0x34
+[   17.767020] ---[ end trace 71da18ce5ef17943 ]---
+[+] UAF  attempt=42 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   18.077362] testgpu: memwrite dst=0x4000040000 phys=0x418a0000 value=0xcafebabe
+[   18.077747] testgpu: memwrite done phys=0x418a0000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   18.399883] testgpu_ringbuffer_submitcmd: 85 callbacks suppressed
+[   18.438024] ------------[ cut here ]------------
+[   18.438385] WARNING: CPU: 3 PID: 32 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   18.439087] Modules linked in:
+[   18.439486] CPU: 3 PID: 32 Comm: kworker/3:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   18.439963] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   18.440305] Workqueue: events kgsl_sharedmem_bind_worker
+[   18.440588] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   18.440929] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   18.441239] lr : __arm_lpae_map+0x3b8/0x4e0
+[   18.441587] sp : ffff80000a14b820
+[   18.441774] x29: ffff80000a14b820 x28: ffff0000057ed000 
+[   18.442050] x27: 0060000000000e40 x26: 0000000043094000 
+[   18.442512] x25: 0000000000001000 x24: 0000004000040000 
+[   18.443369] x23: 0000000000001000 x22: 0000000000000000 
+[   18.443633] x21: 0000000000000001 x20: 0000000000000003 
+[   18.443898] x19: 0000000000000001 x18: 0000000000000000 
+[   18.444167] x17: 0000000000000000 x16: 0000000000000000 
+[   18.444931] x15: 0000b63b7745368a x14: 0000000000000001 
+[   18.445204] x13: 00000000000001d0 x12: ffff000003e76200 
+[   18.445486] x11: 0000000000001000 x10: ffff0000057ed208 
+[   18.445942] x9 : 00600000418a0e43 x8 : ffff0000057ed208 
+[   18.446194] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[   18.446791] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   18.447275] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   18.447620] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[   18.447890] Call trace:
+[   18.448037]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   18.448370]  __arm_lpae_map+0x3b8/0x4e0
+[   18.448563]  __arm_lpae_map+0x13c/0x4e0
+[   18.448782]  __arm_lpae_map+0x13c/0x4e0
+[   18.448969]  __arm_lpae_map+0x13c/0x4e0
+[   18.449158]  arm_lpae_map_pages+0x15c/0x190
+[   18.449365]  arm_lpae_map+0x20/0x30
+[   18.449544]  _iopgtbl_map_page_to_range+0x94/0xf4
+[   18.449799]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[   18.450071]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[   18.450316]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[   18.450882]  process_one_work+0x1bc/0x4b0
+[   18.451092]  worker_thread+0x6c/0x43c
+[   18.451344]  kthread+0x150/0x154
+[   18.451589]  ret_from_fork+0x10/0x34
+[   18.451778] ---[ end trace 71da18ce5ef17944 ]---
+[+] UAF  attempt=44 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   18.760443] testgpu: memwrite dst=0x4000040000 phys=0x418a0000 value=0xcafebabe
+[   18.760800] testgpu: memwrite done phys=0x418a0000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   19.118313] ------------[ cut here ]------------
+[   19.118686] WARNING: CPU: 0 PID: 34 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   19.118952] Modules linked in:
+[   19.119062] CPU: 0 PID: 34 Comm: kworker/0:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   19.119450] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   19.119772] Workqueue: events kgsl_sharedmem_bind_worker
+[   19.120043] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   19.120734] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   19.120977] lr : __arm_lpae_map+0x1bc/0x4e0
+[   19.121176] sp : ffff80000a15b730
+[   19.121345] x29: ffff80000a15b730 x28: ffff0000057ed000 
+[   19.121636] x27: 0060000000000e40 x26: 00000000418a0000 
+[   19.121902] x25: 0000000000200000 x24: 0000004000040000 
+[   19.122175] x23: 0000000000001000 x22: ffff80000a15baf8 
+[   19.122432] x21: 0000000000000001 x20: 0000000000000003 
+[   19.122715] x19: 0000000000000001 x18: ffff0000018c2da0 
+[   19.122974] x17: 0000000000000000 x16: 0000000000000fff 
+[   19.123233] x15: 00000040418e0000 x14: fffffdfffee00000 
+[   19.123495] x13: 0000000000000000 x12: ffff000003e76200 
+[   19.123777] x11: 0000000000001000 x10: ffff0000057ed208 
+[   19.124015] x9 : 0060000043094e43 x8 : ffff0000057ed208 
+[   19.124346] x7 : 0000000000000000 x6 : ffff0000057c5000 
+[   19.124618] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   19.124772] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   19.124921] x1 : 00000000418a0000 x0 : ffff0000056ce900 
+[   19.125071] Call trace:
+[   19.125150]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   19.125277]  __arm_lpae_map+0x1bc/0x4e0
+[   19.125383]  __arm_lpae_map+0x13c/0x4e0
+[   19.125510]  __arm_lpae_map+0x13c/0x4e0
+[   19.125940]  __arm_lpae_map+0x13c/0x4e0
+[   19.126135]  arm_lpae_map_sg+0x308/0x47c
+[   19.126330]  _iopgtbl_map_sg+0x70/0x1c0
+[   19.126528]  kgsl_iopgtbl_map_child+0xa8/0x1c0
+[   19.126781]  kgsl_mmu_map_child+0x40/0xb4
+[   19.126975]  kgsl_sharedmem_bind_worker+0x4a4/0x98c
+[   19.127205]  process_one_work+0x1bc/0x4b0
+[   19.127406]  worker_thread+0x6c/0x43c
+[   19.127631]  kthread+0x150/0x154
+[   19.127794]  ret_from_fork+0x10/0x34
+[   19.127981] ---[ end trace 71da18ce5ef17945 ]---
+[   19.815168] ------------[ cut here ]------------
+[   19.815552] WARNING: CPU: 1 PID: 17 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   19.815982] Modules linked in:
+[   19.816175] CPU: 1 PID: 17 Comm: kworker/1:0 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   19.817216] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   19.817737] Workqueue: events kgsl_sharedmem_bind_worker
+[   19.818004] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   19.818538] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   19.818806] lr : __arm_lpae_map+0x3b8/0x4e0
+[   19.819043] sp : ffff80000a0d3820
+[   19.819206] x29: ffff80000a0d3820 x28: ffff0000057ed000 
+[   19.819653] x27: 0060000000000e40 x26: 0000000043094000 
+[   19.819928] x25: 0000000000001000 x24: 0000004000040000 
+[   19.820164] x23: 0000000000001000 x22: 0000000000000000 
+[   19.820550] x21: 0000000000000001 x20: 0000000000000003 
+[   19.820833] x19: 0000000000000001 x18: 0000000000000000 
+[   19.821054] x17: 0000000000000000 x16: 0000000000000000 
+[   19.821251] x15: 00000000a2704302 x14: 0000000000000001 
+[   19.821516] x13: 000000000000027d x12: ffff000003e76200 
+[   19.821809] x11: 0000000000001000 x10: ffff0000057ed208 
+[   19.822062] x9 : 00600000418a0e43 x8 : ffff0000057ed208 
+[   19.822304] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[   19.822593] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   19.823028] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   19.823299] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[   19.823453] Call trace:
+[   19.823531]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   19.823756]  __arm_lpae_map+0x3b8/0x4e0
+[   19.823957]  __arm_lpae_map+0x13c/0x4e0
+[   19.824150]  __arm_lpae_map+0x13c/0x4e0
+[   19.824337]  __arm_lpae_map+0x13c/0x4e0
+[   19.824480]  arm_lpae_map_pages+0x15c/0x190
+[   19.824628]  arm_lpae_map+0x20/0x30
+[   19.824732]  _iopgtbl_map_page_to_range+0x94/0xf4
+[   19.824860]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[   19.825030]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[   19.825169]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[   19.825303]  process_one_work+0x1bc/0x4b0
+[   19.825413]  worker_thread+0x6c/0x43c
+[   19.825516]  kthread+0x150/0x154
+[   19.825779]  ret_from_fork+0x10/0x34
+[   19.826053] ---[ end trace 71da18ce5ef17946 ]---
+[+] UAF  attempt=48 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   20.142855] testgpu: memwrite dst=0x4000040000 phys=0x418a0000 value=0xcafebabe
+[   20.143084] testgpu: memwrite done phys=0x418a0000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   20.852543] ------------[ cut here ]------------
+[   20.852864] WARNING: CPU: 0 PID: 34 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   20.853178] Modules linked in:
+[   20.853483] CPU: 0 PID: 34 Comm: kworker/0:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   20.853911] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   20.854195] Workqueue: events kgsl_sharedmem_bind_worker
+[   20.854622] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   20.854901] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   20.855124] lr : __arm_lpae_map+0x3b8/0x4e0
+[   20.855594] sp : ffff80000a15b820
+[   20.855784] x29: ffff80000a15b820 x28: ffff0000057ed000 
+[   20.856044] x27: 0060000000000e40 x26: 0000000043094000 
+[   20.856356] x25: 0000000000001000 x24: 0000004000040000 
+[   20.856632] x23: 0000000000001000 x22: 0000000000000000 
+[   20.856887] x21: 0000000000000001 x20: 0000000000000003 
+[   20.857130] x19: 0000000000000001 x18: 0000000000000000 
+[   20.857383] x17: 0000000000000000 x16: 0000000000000000 
+[   20.857850] x15: 0000b60d79176084 x14: 0000000000000001 
+[   20.858140] x13: 0000000000000001 x12: ffff000003e76200 
+[   20.858511] x11: 0000000000001000 x10: ffff0000057ed208 
+[   20.858805] x9 : 00600000418a0e43 x8 : ffff0000057ed208 
+[   20.859063] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[   20.859326] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   20.859682] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   20.859941] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[   20.860192] Call trace:
+[   20.860342]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   20.860692]  __arm_lpae_map+0x3b8/0x4e0
+[   20.860889]  __arm_lpae_map+0x13c/0x4e0
+[   20.861082]  __arm_lpae_map+0x13c/0x4e0
+[   20.861420]  __arm_lpae_map+0x13c/0x4e0
+[   20.861644]  arm_lpae_map_pages+0x15c/0x190
+[   20.861865]  arm_lpae_map+0x20/0x30
+[   20.862046]  _iopgtbl_map_page_to_range+0x94/0xf4
+[   20.862312]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[   20.862590]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[   20.863075]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[   20.863276]  process_one_work+0x1bc/0x4b0
+[   20.863450]  worker_thread+0x6c/0x43c
+[   20.863558]  kthread+0x150/0x154
+[   20.863690]  ret_from_fork+0x10/0x34
+[   20.863795] ---[ end trace 71da18ce5ef17947 ]---
+[+] UAF  attempt=51 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   21.174095] testgpu: memwrite dst=0x4000040000 phys=0x418a0000 value=0xcafebabe
+[   21.174548] testgpu: memwrite done phys=0x418a0000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   21.188180] ------------[ cut here ]------------
+[   21.188549] WARNING: CPU: 0 PID: 34 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   21.189100] Modules linked in:
+[   21.189299] CPU: 0 PID: 34 Comm: kworker/0:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   21.189910] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   21.190270] Workqueue: events kgsl_sharedmem_bind_worker
+[   21.190603] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   21.190881] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   21.191126] lr : __arm_lpae_map+0x3b8/0x4e0
+[   21.191448] sp : ffff80000a15b820
+[   21.191725] x29: ffff80000a15b820 x28: ffff0000057ed000 
+[   21.192024] x27: 0060000000000e40 x26: 0000000043094000 
+[   21.192284] x25: 0000000000001000 x24: 0000004000040000 
+[   21.192836] x23: 0000000000001000 x22: 0000000000000000 
+[   21.193099] x21: 0000000000000001 x20: 0000000000000003 
+[   21.193367] x19: 0000000000000001 x18: 0000000000000000 
+[   21.193643] x17: 0000000000000000 x16: 0000000000000000 
+[   21.194187] x15: 0000b4df18207f62 x14: 0000000000000001 
+[   21.194878] x13: 0000000000000106 x12: ffff000003e76200 
+[   21.195158] x11: 0000000000001000 x10: ffff0000057ed208 
+[   21.195779] x9 : 00600000418a0e43 x8 : ffff0000057ed208 
+[   21.196052] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[   21.196497] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   21.196776] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   21.197039] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[   21.197436] Call trace:
+[   21.197538]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   21.197764]  __arm_lpae_map+0x3b8/0x4e0
+[   21.197962]  __arm_lpae_map+0x13c/0x4e0
+[   21.198155]  __arm_lpae_map+0x13c/0x4e0
+[   21.198459]  __arm_lpae_map+0x13c/0x4e0
+[   21.198677]  arm_lpae_map_pages+0x15c/0x190
+[   21.198880]  arm_lpae_map+0x20/0x30
+[   21.199071]  _iopgtbl_map_page_to_range+0x94/0xf4
+[   21.199298]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[   21.199696]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[   21.199945]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[   21.200209]  process_one_work+0x1bc/0x4b0
+[   21.200406]  worker_thread+0x6c/0x43c
+[   21.200614]  kthread+0x150/0x154
+[   21.200785]  ret_from_fork+0x10/0x34
+[   21.201196] ---[ end trace 71da18ce5ef17948 ]---
+[+] UAF  attempt=52 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   21.514597] testgpu: memwrite dst=0x4000040000 phys=0x418a0000 value=0xcafebabe
+[   21.515185] testgpu: memwrite done phys=0x418a0000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   21.873027] ------------[ cut here ]------------
+[   21.873346] WARNING: CPU: 0 PID: 34 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   21.873740] Modules linked in:
+[   21.874407] CPU: 0 PID: 34 Comm: kworker/0:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   21.874941] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   21.875146] Workqueue: events kgsl_sharedmem_bind_worker
+[   21.875436] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   21.875648] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   21.875787] lr : __arm_lpae_map+0x3b8/0x4e0
+[   21.875899] sp : ffff80000a15b820
+[   21.875991] x29: ffff80000a15b820 x28: ffff0000057ed000 
+[   21.876144] x27: 0060000000000e40 x26: 0000000043094000 
+[   21.876610] x25: 0000000000001000 x24: 0000004000040000 
+[   21.876904] x23: 0000000000001000 x22: 0000000000000000 
+[   21.877165] x21: 0000000000000001 x20: 0000000000000003 
+[   21.877639] x19: 0000000000000001 x18: 0000000000000000 
+[   21.877791] x17: 0000000000000000 x16: 0000000000000000 
+[   21.877939] x15: 00000000fa83b2da x14: 0000000000000001 
+[   21.878089] x13: 00000000000003f5 x12: ffff000003e76200 
+[   21.878410] x11: 0000000000001000 x10: ffff0000057ed208 
+[   21.878714] x9 : 00600000418a0e43 x8 : ffff0000057ed208 
+[   21.879004] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[   21.879366] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   21.879723] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   21.880004] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[   21.880273] Call trace:
+[   21.880730]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   21.881008]  __arm_lpae_map+0x3b8/0x4e0
+[   21.881175]  __arm_lpae_map+0x13c/0x4e0
+[   21.881605]  __arm_lpae_map+0x13c/0x4e0
+[   21.881859]  __arm_lpae_map+0x13c/0x4e0
+[   21.882025]  arm_lpae_map_pages+0x15c/0x190
+[   21.882141]  arm_lpae_map+0x20/0x30
+[   21.882389]  _iopgtbl_map_page_to_range+0x94/0xf4
+[   21.882637]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[   21.882965]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[   21.883201]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[   21.883445]  process_one_work+0x1bc/0x4b0
+[   21.883794]  worker_thread+0x6c/0x43c
+[   21.883984]  kthread+0x150/0x154
+[   21.884252]  ret_from_fork+0x10/0x34
+[   21.884604] ---[ end trace 71da18ce5ef17949 ]---
+[+] UAF  attempt=54 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   22.198901] testgpu: memwrite dst=0x4000040000 phys=0x418a0000 value=0xcafebabe
+[   22.199261] testgpu: memwrite done phys=0x418a0000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   22.213930] ------------[ cut here ]------------
+[   22.214335] WARNING: CPU: 0 PID: 34 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   22.214795] Modules linked in:
+[   22.214990] CPU: 0 PID: 34 Comm: kworker/0:1 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   22.215498] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   22.215953] Workqueue: events kgsl_sharedmem_bind_worker
+[   22.216268] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   22.216787] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   22.217026] lr : __arm_lpae_map+0x3b8/0x4e0
+[   22.217225] sp : ffff80000a15b820
+[   22.217480] x29: ffff80000a15b820 x28: ffff0000057ed000 
+[   22.217761] x27: 0060000000000e40 x26: 0000000043094000 
+[   22.218028] x25: 0000000000001000 x24: 0000004000040000 
+[   22.218296] x23: 0000000000001000 x22: 0000000000000000 
+[   22.218561] x21: 0000000000000001 x20: 0000000000000003 
+[   22.219002] x19: 0000000000000001 x18: 0000000000000000 
+[   22.219274] x17: 0000000000000000 x16: 0000000c27088274 
+[   22.219859] x15: 0000b582840a2b98 x14: 0000000000000001 
+[   22.220123] x13: 00000000000000b6 x12: ffff000003e76200 
+[   22.220467] x11: 0000000000001000 x10: ffff0000057ed208 
+[   22.220755] x9 : 00600000418a0e43 x8 : ffff0000057ed208 
+[   22.220997] x7 : 0000000000000001 x6 : ffff0000057c5000 
+[   22.221595] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   22.221881] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   22.222406] x1 : 0000000043094000 x0 : ffff0000056ce900 
+[   22.222848] Call trace:
+[   22.222984]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   22.223113]  __arm_lpae_map+0x3b8/0x4e0
+[   22.223264]  __arm_lpae_map+0x13c/0x4e0
+[   22.223679]  __arm_lpae_map+0x13c/0x4e0
+[   22.223877]  __arm_lpae_map+0x13c/0x4e0
+[   22.224078]  arm_lpae_map_pages+0x15c/0x190
+[   22.224461]  arm_lpae_map+0x20/0x30
+[   22.224660]  _iopgtbl_map_page_to_range+0x94/0xf4
+[   22.224894]  kgsl_iopgtbl_map_zero_page_to_range+0x90/0xd0
+[   22.225053]  kgsl_mmu_map_zero_page_to_range+0x40/0xb0
+[   22.225304]  kgsl_sharedmem_bind_worker+0x268/0x98c
+[   22.225594]  process_one_work+0x1bc/0x4b0
+[   22.225792]  worker_thread+0x6c/0x43c
+[   22.225984]  kthread+0x150/0x154
+[   22.226158]  ret_from_fork+0x10/0x34
+[   22.226426] ---[ end trace 71da18ce5ef1794a ]---
+[+] UAF  attempt=55 placeholder=0 range=0  VBO 0x4000040000 reads 0x44444444 (placeholder 0x3ffffd0000)
+[   22.537472] testgpu: memwrite dst=0x4000040000 phys=0x418a0000 value=0xcafebabe
+[   22.537849] testgpu: memwrite done phys=0x418a0000 value=0xcafebabe
+[+] WRITE  VBO 0x4000040000 -> placeholder offset 0x0 = 0xcafebabe
+    --- aliased contents of the VBO ---
+hexdump(0xffff87255000, 0x100)
+00000000  be ba fe ca 44 44 44 44 44 44 44 44 44 44 44 44  |....DDDDDDDDDDDD|
+00000010  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000020  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000030  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000040  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000050  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000060  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000070  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000080  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+00000090  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000a0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000b0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000c0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000d0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000e0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+000000f0  44 44 44 44 44 44 44 44 44 44 44 44 44 44 44 44  |DDDDDDDDDDDDDDDD|
+[   23.549172] testgpu_ringbuffer_submitcmd: 80 callbacks suppressed
+[   23.926845] ------------[ cut here ]------------
+[   23.927146] WARNING: CPU: 1 PID: 17 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   23.927756] Modules linked in:
+[   23.927945] CPU: 1 PID: 17 Comm: kworker/1:0 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   23.928328] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   23.928637] Workqueue: events kgsl_sharedmem_bind_worker
+[   23.928883] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   23.929158] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   23.929380] lr : __arm_lpae_map+0x1bc/0x4e0
+[   23.929587] sp : ffff80000a0d3730
+[   23.929737] x29: ffff80000a0d3730 x28: ffff0000057ed000 
+[   23.929987] x27: 0060000000000e40 x26: 00000000418a0000 
+[   23.930266] x25: 0000000000200000 x24: 0000004000040000 
+[   23.930529] x23: 0000000000001000 x22: ffff80000a0d3af8 
+[   23.930835] x21: 0000000000000001 x20: 0000000000000003 
+[   23.931100] x19: 0000000000000001 x18: ffff0000018c00a0 
+[   23.931368] x17: 0000000000000000 x16: 0000000000000fff 
+[   23.931660] x15: 00000040418e0000 x14: fffffdfffee00000 
+[   23.931924] x13: 0000000000000000 x12: ffff000003e76200 
+[   23.932225] x11: 0000000000001000 x10: ffff0000057ed208 
+[   23.932494] x9 : 0060000043094e43 x8 : ffff0000057ed208 
+[   23.932778] x7 : 0000000000000000 x6 : ffff0000057c5000 
+[   23.933050] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   23.933327] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   23.933615] x1 : 00000000418a0000 x0 : ffff0000056ce900 
+[   23.933835] Call trace:
+[   23.933916]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   23.934041]  __arm_lpae_map+0x1bc/0x4e0
+[   23.934146]  __arm_lpae_map+0x13c/0x4e0
+[   23.934251]  __arm_lpae_map+0x13c/0x4e0
+[   23.934356]  __arm_lpae_map+0x13c/0x4e0
+[   23.934461]  arm_lpae_map_sg+0x308/0x47c
+[   23.934614]  _iopgtbl_map_sg+0x70/0x1c0
+[   23.934809]  kgsl_iopgtbl_map_child+0xa8/0x1c0
+[   23.935025]  kgsl_mmu_map_child+0x40/0xb4
+[   23.935337]  kgsl_sharedmem_bind_worker+0x4a4/0x98c
+[   23.935534]  process_one_work+0x1bc/0x4b0
+[   23.935691]  worker_thread+0x6c/0x43c
+[   23.935801]  kthread+0x150/0x154
+[   23.935894]  ret_from_fork+0x10/0x34
+[   23.936000] ---[ end trace 71da18ce5ef1794b ]---
+[   24.278051] ------------[ cut here ]------------
+[   24.278418] WARNING: CPU: 1 PID: 17 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   24.278925] Modules linked in:
+[   24.279118] CPU: 1 PID: 17 Comm: kworker/1:0 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   24.279524] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   24.279826] Workqueue: events kgsl_sharedmem_bind_worker
+[   24.280076] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   24.280340] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   24.280508] lr : __arm_lpae_map+0x1bc/0x4e0
+[   24.280711] sp : ffff80000a0d3730
+[   24.280873] x29: ffff80000a0d3730 x28: ffff0000057ed000 
+[   24.281139] x27: 0060000000000e40 x26: 00000000418a0000 
+[   24.281657] x25: 0000000000200000 x24: 0000004000040000 
+[   24.281931] x23: 0000000000001000 x22: ffff80000a0d3af8 
+[   24.282200] x21: 0000000000000001 x20: 0000000000000003 
+[   24.282490] x19: 0000000000000001 x18: ffff0000018c00a0 
+[   24.282787] x17: 0000000000000000 x16: 0000000000000fff 
+[   24.283043] x15: 00000040418e0000 x14: fffffdfffee00000 
+[   24.283284] x13: 0000000000000000 x12: ffff000003e76200 
+[   24.283476] x11: 0000000000001000 x10: ffff0000057ed208 
+[   24.283829] x9 : 0060000043094e43 x8 : ffff0000057ed208 
+[   24.284109] x7 : 0000000000000000 x6 : ffff0000057c5000 
+[   24.284261] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   24.284408] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   24.284555] x1 : 00000000418a0000 x0 : ffff0000056ce900 
+[   24.284742] Call trace:
+[   24.284820]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   24.284946]  __arm_lpae_map+0x1bc/0x4e0
+[   24.285051]  __arm_lpae_map+0x13c/0x4e0
+[   24.285161]  __arm_lpae_map+0x13c/0x4e0
+[   24.285266]  __arm_lpae_map+0x13c/0x4e0
+[   24.285374]  arm_lpae_map_sg+0x308/0x47c
+[   24.285486]  _iopgtbl_map_sg+0x70/0x1c0
+[   24.285658]  kgsl_iopgtbl_map_child+0xa8/0x1c0
+[   24.285878]  kgsl_mmu_map_child+0x40/0xb4
+[   24.286080]  kgsl_sharedmem_bind_worker+0x4a4/0x98c
+[   24.286331]  process_one_work+0x1bc/0x4b0
+[   24.286446]  worker_thread+0x6c/0x43c
+[   24.286548]  kthread+0x150/0x154
+[   24.286673]  ret_from_fork+0x10/0x34
+[   24.286776] ---[ end trace 71da18ce5ef1794c ]---
+[   24.974479] ------------[ cut here ]------------
+[   24.974799] WARNING: CPU: 1 PID: 17 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   24.975195] Modules linked in:
+[   24.975429] CPU: 1 PID: 17 Comm: kworker/1:0 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   24.975866] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   24.976149] Workqueue: events kgsl_sharedmem_bind_worker
+[   24.976791] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   24.977068] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   24.977303] lr : __arm_lpae_map+0x1bc/0x4e0
+[   24.977501] sp : ffff80000a0d3730
+[   24.977694] x29: ffff80000a0d3730 x28: ffff0000057ed000 
+[   24.977969] x27: 0060000000000e40 x26: 00000000418a0000 
+[   24.978230] x25: 0000000000200000 x24: 0000004000040000 
+[   24.978492] x23: 0000000000001000 x22: ffff80000a0d3af8 
+[   24.978789] x21: 0000000000000001 x20: 0000000000000003 
+[   24.979051] x19: 0000000000000001 x18: ffff00000188c0a0 
+[   24.979306] x17: 0000000000000000 x16: 0000000000000fff 
+[   24.979588] x15: 00000040418e0000 x14: fffffdfffee00000 
+[   24.979864] x13: 0000000000000000 x12: ffff000003e76200 
+[   24.980133] x11: 0000000000001000 x10: ffff0000057ed208 
+[   24.980500] x9 : 0060000043094e43 x8 : ffff0000057ed208 
+[   24.980887] x7 : 0000000000000000 x6 : ffff0000057c5000 
+[   24.981118] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   24.981344] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   24.981595] x1 : 00000000418a0000 x0 : ffff0000056ce900 
+[   24.981829] Call trace:
+[   24.981949]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   24.982140]  __arm_lpae_map+0x1bc/0x4e0
+[   24.982309]  __arm_lpae_map+0x13c/0x4e0
+[   24.982470]  __arm_lpae_map+0x13c/0x4e0
+[   24.982651]  __arm_lpae_map+0x13c/0x4e0
+[   24.982809]  arm_lpae_map_sg+0x308/0x47c
+[   24.982972]  _iopgtbl_map_sg+0x70/0x1c0
+[   24.983135]  kgsl_iopgtbl_map_child+0xa8/0x1c0
+[   24.983315]  kgsl_mmu_map_child+0x40/0xb4
+[   24.983482]  kgsl_sharedmem_bind_worker+0x4a4/0x98c
+[   24.983707]  process_one_work+0x1bc/0x4b0
+[   24.983884]  worker_thread+0x6c/0x43c
+[   24.984046]  kthread+0x150/0x154
+[   24.984196]  ret_from_fork+0x10/0x34
+[   24.984685] ---[ end trace 71da18ce5ef1794d ]---
+
+===============================================================
+ attempts: 64   UAF hits: 21   write-through hits: 21
+ VERDICT: VULNERABLE -- a VBO range outlived its interval-tree range and aliases reallocated storage (21/21 write-through)
+===============================================================
+--- harness exited rc=0 ---
+
+--- kernel log ---
+[   23.927945] CPU: 1 PID: 17 Comm: kworker/1:0 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   23.928328] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   23.928637] Workqueue: events kgsl_sharedmem_bind_worker
+[   23.928883] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   23.929158] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   23.929380] lr : __arm_lpae_map+0x1bc/0x4e0
+[   23.929587] sp : ffff80000a0d3730
+[   23.929737] x29: ffff80000a0d3730 x28: ffff0000057ed000 
+[   23.929987] x27: 0060000000000e40 x26: 00000000418a0000 
+[   23.930266] x25: 0000000000200000 x24: 0000004000040000 
+[   23.930529] x23: 0000000000001000 x22: ffff80000a0d3af8 
+[   23.930835] x21: 0000000000000001 x20: 0000000000000003 
+[   23.931100] x19: 0000000000000001 x18: ffff0000018c00a0 
+[   23.931368] x17: 0000000000000000 x16: 0000000000000fff 
+[   23.931660] x15: 00000040418e0000 x14: fffffdfffee00000 
+[   23.931924] x13: 0000000000000000 x12: ffff000003e76200 
+[   23.932225] x11: 0000000000001000 x10: ffff0000057ed208 
+[   23.932494] x9 : 0060000043094e43 x8 : ffff0000057ed208 
+[   23.932778] x7 : 0000000000000000 x6 : ffff0000057c5000 
+[   23.933050] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   23.933327] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   23.933615] x1 : 00000000418a0000 x0 : ffff0000056ce900 
+[   23.933835] Call trace:
+[   23.933916]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   23.934041]  __arm_lpae_map+0x1bc/0x4e0
+[   23.934146]  __arm_lpae_map+0x13c/0x4e0
+[   23.934251]  __arm_lpae_map+0x13c/0x4e0
+[   23.934356]  __arm_lpae_map+0x13c/0x4e0
+[   23.934461]  arm_lpae_map_sg+0x308/0x47c
+[   23.934614]  _iopgtbl_map_sg+0x70/0x1c0
+[   23.934809]  kgsl_iopgtbl_map_child+0xa8/0x1c0
+[   23.935025]  kgsl_mmu_map_child+0x40/0xb4
+[   23.935337]  kgsl_sharedmem_bind_worker+0x4a4/0x98c
+[   23.935534]  process_one_work+0x1bc/0x4b0
+[   23.935691]  worker_thread+0x6c/0x43c
+[   23.935801]  kthread+0x150/0x154
+[   23.935894]  ret_from_fork+0x10/0x34
+[   23.936000] ---[ end trace 71da18ce5ef1794b ]---
+[   24.278051] ------------[ cut here ]------------
+[   24.278418] WARNING: CPU: 1 PID: 17 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   24.278925] Modules linked in:
+[   24.279118] CPU: 1 PID: 17 Comm: kworker/1:0 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   24.279524] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   24.279826] Workqueue: events kgsl_sharedmem_bind_worker
+[   24.280076] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   24.280340] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   24.280508] lr : __arm_lpae_map+0x1bc/0x4e0
+[   24.280711] sp : ffff80000a0d3730
+[   24.280873] x29: ffff80000a0d3730 x28: ffff0000057ed000 
+[   24.281139] x27: 0060000000000e40 x26: 00000000418a0000 
+[   24.281657] x25: 0000000000200000 x24: 0000004000040000 
+[   24.281931] x23: 0000000000001000 x22: ffff80000a0d3af8 
+[   24.282200] x21: 0000000000000001 x20: 0000000000000003 
+[   24.282490] x19: 0000000000000001 x18: ffff0000018c00a0 
+[   24.282787] x17: 0000000000000000 x16: 0000000000000fff 
+[   24.283043] x15: 00000040418e0000 x14: fffffdfffee00000 
+[   24.283284] x13: 0000000000000000 x12: ffff000003e76200 
+[   24.283476] x11: 0000000000001000 x10: ffff0000057ed208 
+[   24.283829] x9 : 0060000043094e43 x8 : ffff0000057ed208 
+[   24.284109] x7 : 0000000000000000 x6 : ffff0000057c5000 
+[   24.284261] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   24.284408] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   24.284555] x1 : 00000000418a0000 x0 : ffff0000056ce900 
+[   24.284742] Call trace:
+[   24.284820]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   24.284946]  __arm_lpae_map+0x1bc/0x4e0
+[   24.285051]  __arm_lpae_map+0x13c/0x4e0
+[   24.285161]  __arm_lpae_map+0x13c/0x4e0
+[   24.285266]  __arm_lpae_map+0x13c/0x4e0
+[   24.285374]  arm_lpae_map_sg+0x308/0x47c
+[   24.285486]  _iopgtbl_map_sg+0x70/0x1c0
+[   24.285658]  kgsl_iopgtbl_map_child+0xa8/0x1c0
+[   24.285878]  kgsl_mmu_map_child+0x40/0xb4
+[   24.286080]  kgsl_sharedmem_bind_worker+0x4a4/0x98c
+[   24.286331]  process_one_work+0x1bc/0x4b0
+[   24.286446]  worker_thread+0x6c/0x43c
+[   24.286548]  kthread+0x150/0x154
+[   24.286673]  ret_from_fork+0x10/0x34
+[   24.286776] ---[ end trace 71da18ce5ef1794c ]---
+[   24.974479] ------------[ cut here ]------------
+[   24.974799] WARNING: CPU: 1 PID: 17 at drivers/iommu/qcom-io-pgtable-arm.c:368 arm_lpae_init_pte.isra.0+0x40/0x17c
+[   24.975195] Modules linked in:
+[   24.975429] CPU: 1 PID: 17 Comm: kworker/1:0 Tainted: G        W         5.10.198-gc84748f12ae9-dirty #12
+[   24.975866] Hardware name: CVE-2024-23380 KGSL testgpu virt (DT)
+[   24.976149] Workqueue: events kgsl_sharedmem_bind_worker
+[   24.976791] pstate: 20000085 (nzCv daIf -PAN -UAO -TCO BTYPE=--)
+[   24.977068] pc : arm_lpae_init_pte.isra.0+0x40/0x17c
+[   24.977303] lr : __arm_lpae_map+0x1bc/0x4e0
+[   24.977501] sp : ffff80000a0d3730
+[   24.977694] x29: ffff80000a0d3730 x28: ffff0000057ed000 
+[   24.977969] x27: 0060000000000e40 x26: 00000000418a0000 
+[   24.978230] x25: 0000000000200000 x24: 0000004000040000 
+[   24.978492] x23: 0000000000001000 x22: ffff80000a0d3af8 
+[   24.978789] x21: 0000000000000001 x20: 0000000000000003 
+[   24.979051] x19: 0000000000000001 x18: ffff00000188c0a0 
+[   24.979306] x17: 0000000000000000 x16: 0000000000000fff 
+[   24.979588] x15: 00000040418e0000 x14: fffffdfffee00000 
+[   24.979864] x13: 0000000000000000 x12: ffff000003e76200 
+[   24.980133] x11: 0000000000001000 x10: ffff0000057ed208 
+[   24.980500] x9 : 0060000043094e43 x8 : ffff0000057ed208 
+[   24.980887] x7 : 0000000000000000 x6 : ffff0000057c5000 
+[   24.981118] x5 : ffff0000057ed200 x4 : 0000000000000001 
+[   24.981344] x3 : 0000000000000003 x2 : 0060000000000e40 
+[   24.981595] x1 : 00000000418a0000 x0 : ffff0000056ce900 
+[   24.981829] Call trace:
+[   24.981949]  arm_lpae_init_pte.isra.0+0x40/0x17c
+[   24.982140]  __arm_lpae_map+0x1bc/0x4e0
+[   24.982309]  __arm_lpae_map+0x13c/0x4e0
+[   24.982470]  __arm_lpae_map+0x13c/0x4e0
+[   24.982651]  __arm_lpae_map+0x13c/0x4e0
+[   24.982809]  arm_lpae_map_sg+0x308/0x47c
+[   24.982972]  _iopgtbl_map_sg+0x70/0x1c0
+[   24.983135]  kgsl_iopgtbl_map_child+0xa8/0x1c0
+[   24.983315]  kgsl_mmu_map_child+0x40/0xb4
+[   24.983482]  kgsl_sharedmem_bind_worker+0x4a4/0x98c
+[   24.983707]  process_one_work+0x1bc/0x4b0
+[   24.983884]  worker_thread+0x6c/0x43c
+[   24.984046]  kthread+0x150/0x154
+[   24.984196]  ret_from_fork+0x10/0x34
+[   24.984685] ---[ end trace 71da18ce5ef1794d ]---
+
+--- credentials after the run ---
+uid=10000(lab) gid=10000(kgsl) groups=10000(kgsl)
+
+=== lab complete ===
+[   25.431148] reboot: Power down

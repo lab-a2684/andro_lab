@@ -1,0 +1,35 @@
+# CVE-2024-23380 source manifest
+# Captured from the local immutable snapshots on 2026-09-25.
+
+[upstream]
+kernel_repo=https://git.codelinaro.org/clo/la/kernel/msm-5.10.git
+kernel_vulnerable=https://git.codelinaro.org/clo/la/kernel/msm-5.10/-/commit/36f524a278d3c2e72b426e7385814366a626b936
+kernel_fixed=https://git.codelinaro.org/clo/la/kernel/msm-5.10/-/commit/44158877bd0b2fbf65b62ef15815dc43c0dcf429
+graphics_repo=https://git.codelinaro.org/clo/la/platform/vendor/qcom/opensource/graphics-kernel.git
+graphics_vulnerable_parent=https://git.codelinaro.org/clo/la/platform/vendor/qcom/opensource/graphics-kernel/-/commit/c738ff54dfb475a4535a579846adba06dad6d44e
+graphics_fixed=https://git.codelinaro.org/clo/la/platform/vendor/qcom/opensource/graphics-kernel/-/commit/919306871384731b35cbfafb208bbd13bff08605
+poc_repo=https://github.com/m1zole/adreno-1day.git
+poc_commit=https://github.com/m1zole/adreno-1day/commit/fcd412268cd72bfa73af7895d7406e18ec73b4dd
+
+[archive_sha256]
+kernel_vulnerable=4b3632bd173f91a2be6b623b6e6b22e29b977cde715e514ccaa517f3c6f05487
+kernel_fixed=d8dd8f81ab4e8a3cb5d157b08cdd5171e17a76b01ef43fd604c517a1aa22daaa
+graphics_vulnerable=f06d9d16621643be616f3bf36301312086e70de129e70cd940d486ec6b87e134
+graphics_fixed=012d2b64dc64d2b2bb50b3b77636ef9e8b704539a1dc0217aae35082a629f978
+
+[lab_patch_sha256]
+testgpu_patch=bd8b087c58d96044aafe5559c76a6d1b117095425ee0c61cf9f152abe62859d3
+testgpu_source=bb2e741063e995f03047d182964fed82c32a670e54a4ad2db9d78b758bbcfbbe
+arm_smmu_memmap_patch=3bbc7e0b5e23b0737ad4f29f1d882caef3ccf770c8ec28ee7c2a5047f9032207
+testgpu_no_dcvs_patch=3a726fd852c0b9d3b0aec2d4a2ff51cc52ff9f26f3bc327bd888e8d15e32d066
+
+[protected_files]
+# Verified byte-for-byte against the corresponding kernel tarball.
+drivers/gpu/msm/kgsl_vbo.c
+drivers/gpu/msm/kgsl_mmu.c
+drivers/gpu/msm/kgsl_iommu.c
+drivers/gpu/msm/kgsl_sharedmem.c
+drivers/gpu/msm/kgsl_pool.c
+drivers/gpu/msm/kgsl_reclaim.c
+drivers/gpu/msm/kgsl_ioctl.c
+drivers/gpu/msm/adreno.c

